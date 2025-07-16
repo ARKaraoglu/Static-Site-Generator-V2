@@ -39,5 +39,5 @@ class LeafNode(HTMLNode):
         elif self.tag == None:
             return f"{self.value}"
         else:
-            return f"<{self.tag}{self.props_to_html()}>{self.value}</{self.tag}>"
+            return f'<{self.tag}{self.props_to_html()}>{self.value}</{self.tag}>'
 

@@ -1,5 +1,5 @@
 import unittest
-from htmlnode import HTMLNode
+from htmlnode import HTMLNode, LeafNode
 from textnode import TextNode, TextType
 
 class TestHTMLNode(unittest.TestCase):
@@ -32,6 +32,27 @@ class TestHTMLNode(unittest.TestCase):
         node = HTMLNode("html", None, None, props = None)
         with self.assertRaises(NotImplementedError):
             node.to_html()
+
+class TestLeafNode(unittest.TestCase):
+    def test_init(self):
+        leafnode = LeafNode("p", "This is a leafnode")
+        self.assertTrue(leafnode)
+
+    def test_init2(self):
+        leafnode = LeafNode("b", "This is a leafnode", {"href": "/"})
+        self.assertTrue(leafnode)
+
+    def test_to_html(self):
+        node = LeafNode("p", "This is a leafnode")
+        self.assertEqual(node.to_html(), "<p>This is a leafnode</p>")
+
+    def test_to_html2(self):
+        node = LeafNode("b", "This is a leafnode", {"href": "/"})
+        self.assertEqual(node.to_html(), '<b href=/>This is a leafnode</b>')
+
+
+
+
 
 if __name__ == "__main__":
     unittest.main()
