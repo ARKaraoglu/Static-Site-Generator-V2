@@ -13,10 +13,10 @@ class HTMLNode():
         if self.props == None:
             return ""
         
-        props_string = ""
+        props_string = ''
         assert self.props is not None
         for key, value in self.props.items():
-            props_string += f" {key}={value}"
+            props_string += f' {key}="{value}"'
         
         return props_string
 
@@ -54,23 +54,22 @@ class ParentNode(HTMLNode):
             raise ValueError("ParentNode must have children")
 
         else:
-            parent_string = ""
+            parent_string = ''
 
-            parent_string += f"<{self.tag}{self.props}>"
-
+            parent_string += f'<{self.tag}{self.props_to_html()}>'
             #self.children is a list.
             for child in self.children:
                 if isinstance(child, ParentNode):
-                    child.to_html()
+                    parent_string += child.to_html()
                 else:
                     parent_string += child.to_html()
 
-            parent_string += f"</{self.tag}>"
+            parent_string += f'</{self.tag}>'
             
             return parent_string
 
-
-
+    def __repr__(self):
+        return f'ParentNode({self.tag}, {self.children}, {self.props})'
 
 
 
