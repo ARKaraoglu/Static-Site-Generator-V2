@@ -1,6 +1,6 @@
 import unittest
 from textnode import TextNode, TextType
-from markdown_logic import split_nodes_delimiter
+from markdown_logic import split_nodes_delimiter, extract_markdown_images, extract_markdown_links
 
 class TestSplitDelimiter(unittest.TestCase):
     def test_split_nodes_delimiter_1_child(self):
@@ -52,6 +52,62 @@ class TestSplitDelimiter(unittest.TestCase):
         node_list = split_nodes_delimiter([child], "**", TextType.BOLD)
         node_list = split_nodes_delimiter(node_list, "_", TextType.ITALIC)
         self.assertEqual(node_list, [TextNode("Bold", TextType.BOLD, None), TextNode(" and ", TextType.TEXT, None), TextNode("italic", TextType.ITALIC, None), TextNode(" text.", TextType.TEXT, None)])
+
+
+
+class TestExtractMarkdownImages(unittest.TestCase):
+    def test_extract_markdown_image1(self):
+        text = "Here is the ![image](https://url)"
+        image_list = extract_markdown_images(text)
+        self.assertListEqual(image_list, [("image", "https://url")])
+
+    def test_extract_markdown_image2(self):
+        text = "![image in front](https://url) image is in the front of the sentence."
+        image_list = extract_markdown_images(text)
+        self.assertListEqual(image_list, [("image in front", "https://url")])
+
+    def test_extract_markdown_image_multiple1(self):
+        text = "This is a sentence with ![image one](/) and another image at the end![image two](/)"
+        image_list = extract_markdown_images(text)
+        self.assertListEqual(image_list, [("image one", "/"),("image two", "/")])
+
+    def test_extract_markdown_image_multiple2(self):
+        text = "![image three](#)This is a ![image four]() sentence with ![image one](/) and another image at the end![image two](/)"
+        image_list = extract_markdown_images(text)
+        self.assertListEqual(image_list, [("image three", "#"), ("image four", ""), ("image one", "/"), ("image two", "/")])
+    
+    def test_extract_markdown_image_no_image(self):
+        text = "[link](url), no image!"
+        image_list = extract_markdown_images(text)
+        self.assertListEqual(image_list, [])
+
+
+class TestExtractMarkdownLinks(unittest.TestCase):
+    def test_extract_markdown_links1(self):
+        text = "Here is the [anchor text for link](/)"
+        link_list = extract_markdown_links(text)
+        self.assertListEqual(link_list, [("anchor text for link", "/")])
+
+    def test_extract_markdown_links2(self):
+        text = "[link](href://#) Link at the start"
+        link_list = extract_markdown_links(text)
+        self.assertListEqual(link_list, [("link", "href://#")])
+    
+    def test_extract_markdown_links_multiple1(self):
+        text = "Here is the [link 1](/) and [link two](/)"
+        link_list = extract_markdown_links(text)
+        self.assertListEqual(link_list, [("link 1", "/"), ("link two", "/")])
+    
+    def test_extract_markdown_links_multiple2(self):
+        text = "This [Link one](/) sentence have [link two](#) four [anchor text for link](/) links in it! [final link](/)"
+        link_list = extract_markdown_links(text)
+        self.assertListEqual(link_list, [("Link one", "/"), ("link two", "#"), ("anchor text for link", "/"), ("final link", "/")])
+    
+    def test_extract_markdown_links_no_link(self):
+        text = "Here is the ![anchor text for link](/)"
+        link_list = extract_markdown_links(text)
+        self.assertListEqual(link_list, [])
+
 
 if __name__ == "__main__":
     unittest.main()
