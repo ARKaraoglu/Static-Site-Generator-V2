@@ -1,6 +1,6 @@
 import unittest
 from textnode import TextNode, TextType
-from markdown_logic import split_nodes_delimiter, extract_markdown_images, extract_markdown_links
+from markdown_logic import split_nodes_delimiter, extract_markdown_images, extract_markdown_links, split_nodes_image
 
 class TestSplitDelimiter(unittest.TestCase):
     def test_split_nodes_delimiter_1_child(self):
@@ -107,6 +107,38 @@ class TestExtractMarkdownLinks(unittest.TestCase):
         text = "Here is the ![anchor text for link](/)"
         link_list = extract_markdown_links(text)
         self.assertListEqual(link_list, [])
+
+
+class TestSplitNodesImage(unittest.TestCase):
+    def test_split_nodes_image1(self):
+        text = "This is a **bold** text with an image at the end ![image](image url)"
+        node = TextNode(text, TextType.TEXT)
+        
+        split_nodes = split_nodes_image([node])
+        self.assertListEqual(split_nodes, [TextNode("This is a **bold** text with an image at the end ", TextType.TEXT), TextNode("image", TextType.IMAGE, "image url")])
+
+    def test_split_nodes_image2(self):
+        text = "![image](image url) This is a **bold** text with an image at the start."
+        node = TextNode(text, TextType.TEXT)
+        
+        split_nodes = split_nodes_image([node])
+        self.assertListEqual(split_nodes, [TextNode("image", TextType.IMAGE, "image url"), TextNode(" This is a **bold** text with an image at the start.", TextType.TEXT)])
+
+    def test_split_nodes_image3(self):
+        text = "This is a **bold** text with ![image](image url) an image at _italic_ the middle."
+        node = TextNode(text, TextType.TEXT)
+        
+        split_nodes = split_nodes_image([node])
+        self.assertListEqual(split_nodes, [TextNode("This is a **bold** text with ", TextType.TEXT), TextNode("image", TextType.IMAGE, "image url"), TextNode(" an image at _italic_ the middle.", TextType.TEXT)])
+
+    def test_split_nodes_image_multiple(self):
+        pass
+
+
+
+class TestSplitNodesLink(unittest.TestCase):
+    pass
+
 
 
 if __name__ == "__main__":
