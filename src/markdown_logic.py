@@ -40,6 +40,7 @@ def split_nodes_delimiter(old_nodes, delimiter, text_type):
 def extract_markdown_images(text):
     image_pattern = r'\!\[(.*?)\]\((.*?)\)'
     images = re.findall(image_pattern, text)
+    # print(f"Inside extract images: {images}\n")
     return images
 
 #NOTE: When this function supports multiple opening and closing brackets AND paranthesis, it will add the extra brackets to image alt text AND paranthesis to link source. 
@@ -62,7 +63,7 @@ def split_nodes_image(old_nodes):
             continue
 
         images = extract_markdown_images(node.text)
-        
+        # print(f"images: {images}")
         if len(images) == 0:
             new_nodes.append(node)
             continue
@@ -110,8 +111,33 @@ def split_nodes_link(old_nodes):
             new_nodes.append(node)
             continue
 
+        new_texts = [node.text]
+
         for link in links:
-            new_nodes.append(TextNode(link[0], TextType.LINK, link[1]))
+            temp_texts = []
+            for n_text in new_texts:
+                temp_texts.extend(n_text.split(f"[{link[0]}]({link[1]})"))
+            new_texts = temp_texts
+
+
+        total_length = len(links) + len(new_texts)
+        for x in range(0, total_length):
+            if len(links) == 0 and len(new_texts) == 0:
+                break
+
+            if x % 2 == 0:
+                if new_texts[0] == "":
+                    new_texts.pop(0)
+                    continue
+                else:
+                    new_nodes.append(TextNode(f"{new_texts[0]}", TextType.TEXT))
+                    new_texts.pop(0)
+            else:
+                new_nodes.append(TextNode(f"{links[0][0]}", TextType.LINK, f"{links[0][1]}"))
+                links.pop(0)
+
+    return new_nodes
+
 
 #
 # node1 = TextNode("Testnode 1 **Bold**     ", TextType.TEXT)

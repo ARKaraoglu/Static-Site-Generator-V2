@@ -1,6 +1,6 @@
 import unittest
 from textnode import TextNode, TextType
-from markdown_logic import split_nodes_delimiter, extract_markdown_images, extract_markdown_links, split_nodes_image
+from markdown_logic import split_nodes_delimiter, extract_markdown_images, extract_markdown_links, split_nodes_image, split_nodes_link
 
 class TestSplitDelimiter(unittest.TestCase):
     def test_split_nodes_delimiter_1_child(self):
@@ -32,7 +32,6 @@ class TestSplitDelimiter(unittest.TestCase):
         self.assertEqual(node_list, [TextNode("This is a regular textnode with ", TextType.TEXT,None),TextNode("<p>there is code here</p>", TextType.CODE,None),TextNode(" text in it.", TextType.TEXT,None),TextNode("Node with ", TextType.TEXT,None),TextNode("code", TextType.CODE,None),TextNode("Code", TextType.CODE,None),TextNode(" word in the beginning", TextType.TEXT,None), TextNode("<html><div><p>THIS IS CODE TEXT</p></div></html>", TextType.CODE, None)])
 
     def test_split_nodes_delimiter_mix_text_types(self):
-        self.maxDiff = None
         child1 = TextNode("This is of text type with **bold** word in it.", TextType.TEXT)
         child2 = TextNode("This is a bold node", TextType.BOLD)
         child3 = TextNode("This is the second text type child with _italic_ word in it!", TextType.TEXT)
@@ -131,15 +130,46 @@ class TestSplitNodesImage(unittest.TestCase):
         split_nodes = split_nodes_image([node])
         self.assertListEqual(split_nodes, [TextNode("This is a **bold** text with ", TextType.TEXT), TextNode("image", TextType.IMAGE, "image url"), TextNode(" an image at _italic_ the middle.", TextType.TEXT)])
 
-    def test_split_nodes_image_multiple(self):
-        pass
+    def test_split_nodes_image4(self):
+        text = "![image 1](image)"
+        node = TextNode(text, TextType.TEXT)
 
+        split_nodes = split_nodes_image([node])
+        self.assertListEqual(split_nodes, [TextNode("image 1", TextType.IMAGE, "image")])
+
+    def test_split_nodes_image_multiple(self):
+        text = "![image 1](image 1) This text have ![image 2]( http://www.google.com ) 3 images in total ![image 3](image 3)"
+        node = TextNode(text, TextType.TEXT)
+
+        split_nodes = split_nodes_image([node])
+        self.assertListEqual(split_nodes, [TextNode("image 1", TextType.IMAGE, "image 1"),TextNode(" This text have ", TextType.TEXT),TextNode("image 2", TextType.IMAGE, " http://www.google.com "),TextNode(" 3 images in total ",TextType.TEXT),TextNode("image 3", TextType.IMAGE, "image 3")])
+
+    def test_split_nodes_image_no_image(self):
+        text = "[image 1](image 1) This text have [image 2]( http://www.google.com ) 3 images in total [image 3](image 3)"
+        node = TextNode(text, TextType.TEXT)
+
+        split_nodes = split_nodes_image([node])
+        self.assertListEqual(split_nodes, [TextNode("[image 1](image 1) This text have [image 2]( http://www.google.com ) 3 images in total [image 3](image 3)", TextType.TEXT)])
 
 
 class TestSplitNodesLink(unittest.TestCase):
-    pass
+    def test_split_nodes_link1(self):
+        text = "[link1](src=/)"
+        node = TextNode(text, TextType.TEXT)
 
+        split_nodes = split_nodes_link([node])
+        self.assertListEqual(split_nodes, [TextNode("link1", TextType.LINK, "src=/")])
+    
+    def test_split_nodes_link2(self):
+        pass
 
-
+    def test_split_nodes_link3(self):
+        pass
+    
+    def test_split_nodes_link4(self):
+        pass
+    
+    def test_split_nodes_link5(self):
+        pass
 if __name__ == "__main__":
     unittest.main()
