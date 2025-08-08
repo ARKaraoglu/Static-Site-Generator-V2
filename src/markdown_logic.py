@@ -62,7 +62,6 @@ def split_nodes_image(old_nodes):
             continue
 
         images = extract_markdown_images(node.text)
-        # print(f"images: {images}")
         if len(images) == 0:
             new_nodes.append(node)
             continue
