@@ -13,10 +13,9 @@ def split_nodes_delimiter(old_nodes, delimiter, text_type):
 
         new_split_nodes = []
         split_values = node.text.split(delimiter)
-
         # If No matching delimiters found, the length of the values list will be dividable by 2.
         if len(split_values) % 2 == 0:
-            raise Exception("No Matching delimiters: " + split_values)
+            raise Exception(f"No Matching delimiters!\n    Text: {node.text}\n    Split_Values: {split_values}\n")
 
         for x in range(0, len(split_values)):
             # If a value is empty or full of empty space, we skip
@@ -80,7 +79,7 @@ def split_nodes_image(old_nodes):
                 break
 
             if x % 2 == 0:
-                if new_texts[0] == "":
+                if new_texts[0].strip() == "":
                     new_texts.pop(0)
                     continue
                 else:
@@ -124,7 +123,7 @@ def split_nodes_link(old_nodes):
                 break
 
             if x % 2 == 0:
-                if new_texts[0] == "":
+                if new_texts[0].strip() == "":
                     new_texts.pop(0)
                     continue
                 else:
@@ -137,13 +136,54 @@ def split_nodes_link(old_nodes):
     return new_nodes
 
 
-#
-# node1 = TextNode("Testnode 1 **Bold**     ", TextType.TEXT)
-# node2 = TextNode("TextNode 2", TextType.TEXT)
-# node3 = TextNode("TextNode 3 `cODE`", TextType.TEXT)
-#
-# split_nodes_delimiter([TextNode("Testnode 1 **Bold**     ", TextType.TEXT)], "**", TextType.BOLD)
-# split_nodes_delimiter([TextNode("TextNode 2", TextType.TEXT)], "_", TextType.ITALIC)
-# split_nodes_delimiter([TextNode("TextNode 3 `cODE`", TextType.TEXT)], "`", TextType.CODE)
-#
-# split_nodes_delimiter([node1, node2, node3], "**", TextType.BOLD)
+def text_to_textnode(text):
+    t_nodes = [TextNode(text, TextType.TEXT)]
+
+    detected_delimiter = True
+    while detected_delimiter == True:
+        detected_delimiter = False
+        temp_node_list = []
+        
+        for node in t_nodes:
+            if node.text_type != TextType.TEXT:
+                temp_node_list.append(node)
+                continue
+
+            if "**" in node.text:
+                detected_delimiter = True
+                split_nodes = split_nodes_delimiter([node], "**", TextType.BOLD)
+                temp_node_list.extend(split_nodes)
+                continue
+
+            if "_" in node.text:
+                detected_delimiter = True
+                split_nodes = split_nodes_delimiter([node], "_", TextType.ITALIC)
+                temp_node_list.extend(split_nodes)
+                continue
+            
+            if "`" in node.text:
+                detected_delimiter = True
+                split_nodes = split_nodes_delimiter([node], "`", TextType.CODE)
+                temp_node_list.extend(split_nodes)
+                continue
+            
+            if len(extract_markdown_images(node.text)) > 0:
+                detected_delimiter = True
+                split_nodes = split_nodes_image([node])
+                temp_node_list.extend(split_nodes)
+                continue
+
+            if len(extract_markdown_links(node.text)) > 0:
+                detected_delimiter = True
+                split_nodes = split_nodes_link([node])
+                temp_node_list.extend(split_nodes)
+                continue
+
+            temp_node_list.append(node) # If it is a textnode with no inline markdown
+
+        t_nodes = temp_node_list
+    return t_nodes
+
+
+
+

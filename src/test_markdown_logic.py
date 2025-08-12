@@ -1,6 +1,6 @@
 import unittest
 from textnode import TextNode, TextType
-from markdown_logic import split_nodes_delimiter, extract_markdown_images, extract_markdown_links, split_nodes_image, split_nodes_link
+from markdown_logic import split_nodes_delimiter, extract_markdown_images, extract_markdown_links, split_nodes_image, split_nodes_link, text_to_textnode
 
 class TestSplitDelimiter(unittest.TestCase):
     def test_split_nodes_delimiter_1_child(self):
@@ -191,7 +191,51 @@ class TestSplitNodesLink(unittest.TestCase):
         split_nodes = split_nodes_link([node])
         self.assertListEqual(split_nodes, [TextNode("There is no link in this text except an image ![image](image url)", TextType.TEXT)])
 
+class TestTextToTextNode(unittest.TestCase):
+    def test_text_to_textnode_bold(self):
+        text = "There is a **bold** text in this text."
+        split_nodes = text_to_textnode(text)
+        self.assertListEqual(split_nodes, [TextNode("There is a ", TextType.TEXT),TextNode("bold", TextType.BOLD),TextNode(" text in this text.", TextType.TEXT)])
+    
+    def test_text_to_textnode_multi_bold(self):
+        text = "The **sunset** painted the sky in shades of **crimson**, orange, and gold. A **cool breeze** drifted across the **field**, carrying the scent of **freshly cut** grass. Somewhere in the **distance**, a **lone bird** sang, its voice **echoing** through the trees. The **path** ahead was **narrow**, winding between **ancient** oaks and **whispering** pines. Every step felt **lighter**, as though the **world** had paused to **breathe**."
+        split_nodes = text_to_textnode(text)
+        self.assertListEqual(split_nodes, [TextNode("The ", TextType.TEXT), TextNode("sunset", TextType.BOLD),TextNode(" painted the sky in shades of ", TextType.TEXT),TextNode("crimson", TextType.BOLD),TextNode(", orange, and gold. A ", TextType.TEXT),TextNode("cool breeze", TextType.BOLD),TextNode(" drifted across the ", TextType.TEXT),TextNode("field", TextType.BOLD),TextNode(", carrying the scent of ", TextType.TEXT),TextNode("freshly cut", TextType.BOLD),TextNode(" grass. Somewhere in the ", TextType.TEXT),TextNode("distance", TextType.BOLD),TextNode(", a ", TextType.TEXT),TextNode("lone bird", TextType.BOLD),TextNode(" sang, its voice ", TextType.TEXT),TextNode("echoing", TextType.BOLD),TextNode(" through the trees. The ", TextType.TEXT),TextNode("path", TextType.BOLD),TextNode(" ahead was ", TextType.TEXT),TextNode("narrow", TextType.BOLD),TextNode(", winding between ", TextType.TEXT),TextNode("ancient", TextType.BOLD),TextNode(" oaks and ", TextType.TEXT),TextNode("whispering", TextType.BOLD),TextNode(" pines. Every step felt ", TextType.TEXT),TextNode("lighter", TextType.BOLD),TextNode(", as though the ", TextType.TEXT),TextNode("world", TextType.BOLD),TextNode(" had paused to ", TextType.TEXT),TextNode("breathe", TextType.BOLD), TextNode(".", TextType.TEXT)])
 
+    def test_text_to_textnode_italic(self):
+        text = "There is an _italic_ word in this text."
+        split_nodes = text_to_textnode(text)
+        self.assertListEqual(split_nodes, [TextNode("There is an ", TextType.TEXT), TextNode("italic", TextType.ITALIC), TextNode(" word in this text.", TextType.TEXT)])
+
+    def test_text_to_textnode_multi_italic(self):
+        text = "The _sunset_ spread across the _horizon_ in waves of orange and gold, while a _soft breeze_ whispered through the _trees_. Somewhere beyond the _hills_, a _river_ glimmered under the fading _light_, and the _world_ seemed to _pause_ in quiet reflection."
+        split_nodes = text_to_textnode(text)
+        self.assertListEqual(split_nodes, [TextNode("The ", TextType.TEXT),TextNode("sunset", TextType.ITALIC),TextNode(" spread across the ", TextType.TEXT),TextNode("horizon", TextType.ITALIC),TextNode(" in waves of orange and gold, while a ", TextType.TEXT),TextNode("soft breeze", TextType.ITALIC),TextNode(" whispered through the ", TextType.TEXT),TextNode("trees", TextType.ITALIC),TextNode(". Somewhere beyond the ", TextType.TEXT),TextNode("hills", TextType.ITALIC),TextNode(", a ", TextType.TEXT),TextNode("river", TextType.ITALIC),TextNode(" glimmered under the fading ", TextType.TEXT),TextNode("light", TextType.ITALIC),TextNode(", and the ", TextType.TEXT),TextNode("world", TextType.ITALIC), TextNode(" seemed to ", TextType.TEXT),TextNode("pause", TextType.ITALIC), TextNode(" in quiet reflection.", TextType.TEXT)])
+    
+    def test_text_to_textnode_code(self):
+        text = "There is a `int main(){ return 0;}` word in this text."
+        split_nodes = text_to_textnode(text)
+        self.assertListEqual(split_nodes, [TextNode("There is a ", TextType.TEXT), TextNode("int main(){ return 0;}", TextType.CODE), TextNode(" word in this text.", TextType.TEXT)])
+
+    def test_text_to_textnode_multi_code(self):
+        text = "I set `timeout=30` in the config, replaced `foo()` with `bar()`, updated `API-KEY`, and removed the unused `debug-mode`."
+        split_nodes = text_to_textnode(text)
+        self.assertListEqual(split_nodes, [TextNode("I set ", TextType.TEXT), TextNode("timeout=30", TextType.CODE),TextNode(" in the config, replaced ", TextType.TEXT),TextNode("foo()", TextType.CODE),TextNode(" with ", TextType.TEXT),TextNode("bar()", TextType.CODE),TextNode(", updated ", TextType.TEXT),TextNode("API-KEY", TextType.CODE),TextNode(", and removed the unused ", TextType.TEXT),TextNode("debug-mode", TextType.CODE), TextNode(".", TextType.TEXT)])
+
+    def test_text_to_textnode_image_and_link(self):
+        text = "There is an ![image](image source) and [link](link url) in this text."
+        split_nodes = text_to_textnode(text)
+        self.assertListEqual(split_nodes, [TextNode("There is an ", TextType.TEXT), TextNode("image", TextType.IMAGE, "image source"), TextNode(" and ", TextType.TEXT), TextNode("link", TextType.LINK, "link url"), TextNode(" in this text.", TextType.TEXT)])
+
+    def test_text_to_textnode_multi_image_and_link(self):
+        text = "![Mountain Sunrise](https://example.com/mountain.jpg) The beauty of nature can inspire us in many ways, and you can learn more about mountain ranges [here](https://example.com/mountains). ![City Lights](https://example.com/city.jpg) Urban landscapes have their own kind of charm, and you can discover famous skylines [here](https://example.com/cities). ![Ocean Waves](https://example.com/ocean.jpg) The sea has always fascinated humanity, and you can read more about marine life [here](https://example.com/ocean-life)."
+        split_nodes = text_to_textnode(text)
+        self.assertListEqual(split_nodes, [TextNode("Mountain Sunrise", TextType.IMAGE, "https://example.com/mountain.jpg"),TextNode(" The beauty of nature can inspire us in many ways, and you can learn more about mountain ranges ", TextType.TEXT),TextNode("here", TextType.LINK, "https://example.com/mountains"),TextNode(". ", TextType.TEXT),TextNode("City Lights", TextType.IMAGE, "https://example.com/city.jpg"),TextNode(" Urban landscapes have their own kind of charm, and you can discover famous skylines ", TextType.TEXT),TextNode("here", TextType.LINK, "https://example.com/cities"),TextNode(". ", TextType.TEXT),TextNode("Ocean Waves", TextType.IMAGE, "https://example.com/ocean.jpg"),TextNode(" The sea has always fascinated humanity, and you can read more about marine life ", TextType.TEXT),TextNode("here", TextType.LINK, "https://example.com/ocean-life"), TextNode(".", TextType.TEXT)])
+
+    def test_text_to_textnode_multi_type(self):
+        text = "The **sunset** painted the _horizon_ in warm colors, while the `camera` captured the moment perfectly ![Golden Hour](https://example.com/sunset.jpg). Later, I checked the details [here](https://example.com/photography) and learned how to adjust `exposure` for better shots. Walking into the city, the **lights** reflected on the _wet streets_ ![City Reflections](https://example.com/city.jpg), making me think about optimizing my `render-lights()` function, which I read about [here](https://example.com/code-tips). Finally, standing by the _shore_, the **waves** rolled in rhythm ![Ocean Waves](https://example.com/ocean.jpg), and I logged the sound frequency using `analyze-wave()` from the guide [here](https://example.com/ocean-research)."
+        split_nodes = text_to_textnode(text)
+        self.assertListEqual(split_nodes, [TextNode("The ", TextType.TEXT),TextNode("sunset", TextType.BOLD),TextNode(" painted the ", TextType.TEXT),TextNode("horizon", TextType.ITALIC),TextNode(" in warm colors, while the ", TextType.TEXT),TextNode("camera", TextType.CODE),TextNode(" captured the moment perfectly ", TextType.TEXT),TextNode("Golden Hour", TextType.IMAGE, "https://example.com/sunset.jpg"),TextNode(". Later, I checked the details ", TextType.TEXT),TextNode("here", TextType.LINK, "https://example.com/photography"),TextNode(" and learned how to adjust ", TextType.TEXT),TextNode("exposure", TextType.CODE),TextNode(" for better shots. Walking into the city, the ", TextType.TEXT),TextNode("lights", TextType.BOLD),TextNode(" reflected on the ", TextType.TEXT),TextNode("wet streets", TextType.ITALIC),TextNode("City Reflections", TextType.IMAGE, "https://example.com/city.jpg"),TextNode(", making me think about optimizing my ", TextType.TEXT),TextNode("render-lights()", TextType.CODE),TextNode(" function, which I read about ", TextType.TEXT),TextNode("here", TextType.LINK, "https://example.com/code-tips"),TextNode(". Finally, standing by the ", TextType.TEXT),TextNode("shore", TextType.ITALIC),TextNode(", the ", TextType.TEXT),TextNode("waves", TextType.BOLD),TextNode(" rolled in rhythm ", TextType.TEXT),TextNode("Ocean Waves", TextType.IMAGE, "https://example.com/ocean.jpg"),TextNode(", and I logged the sound frequency using ", TextType.TEXT),TextNode("analyze-wave()", TextType.CODE),TextNode(" from the guide ", TextType.TEXT),TextNode("here", TextType.LINK, "https://example.com/ocean-research"),TextNode(".", TextType.TEXT)])
 
 
 if __name__ == "__main__":

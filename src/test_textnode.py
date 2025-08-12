@@ -1,6 +1,6 @@
 import unittest
 from textnode import TextNode, TextType, text_node_to_html_node
-from htmlnode import HTMLNode, LeafNode
+from htmlnode import LeafNode
 
 class TestTextNode(unittest.TestCase):
     def test_eq(self):
@@ -102,8 +102,6 @@ class TestTextNode(unittest.TestCase):
         
         self.assertIsInstance(htmlnode, LeafNode)
         self.assertEqual(htmlnode.to_html(), '<img src="/" alt="This is an image"></img>')
-
-
 
 if __name__ == "__main__":
     unittest.main()
