@@ -42,6 +42,11 @@ class LeafNode(HTMLNode):
     def __repr__(self):
         return f"LeafNode({self.tag}, {self.value}, {self.props})"
 
+    def __eq__(self, other):
+        if isinstance(self, other) and self.tag == other.tag and self.value == other.value and self.props == other.props:
+            return True
+        return False
+
 class ParentNode(HTMLNode):
     def __init__(self, tag, children, props = None):
         super().__init__(tag, None, children, props)
@@ -71,5 +76,8 @@ class ParentNode(HTMLNode):
     def __repr__(self):
         return f'ParentNode({self.tag}, {self.children}, {self.props})'
 
-
+    def __eq__(self, other):
+        if isinstance(self, other) and self.tag == other.tag and self.children == other.children and self.props == other.props:
+            return True
+        return False
 
