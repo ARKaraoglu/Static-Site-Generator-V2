@@ -1,5 +1,6 @@
-from textnode import TextNode, TextType
-
+from htmlnode import ParentNode, LeafNode
+from textnode import TextNode, TextType, text_node_to_html_node
+from block_logic import BlockType, markdown_to_blocks, block_to_block_type
 import re
 
 
@@ -184,6 +185,141 @@ def text_to_textnode(text):
         t_nodes = temp_node_list
     return t_nodes
 
+#TEST: Function requires testing!
+def block_to_paragraph_element(block):
+    lines = block.split("\n")
+    inline_textnodes = []
+    
+
+    for line in lines:
+        # If a <p> block has more than 1 line, then we add <br> at the end of each to merge them all under 1 <p> parent node to avoid excess space between lines
+        if len(lines) > 1:
+            line += "<br>"
+        inline_textnodes.extend(text_to_textnode(line))
+
+    inline_leafnodes = []
+    for node in inline_textnodes:
+        inline_leafnodes.append(text_node_to_html_node(node))
+
+    paragraph_element = ParentNode("p", inline_leafnodes)
+    return paragraph_element
+
+#TEST: Function requires testing!
+def block_to_header_element(block):
+    block_first_split = block.split("#", 1)
+    new_block = block_first_split[1]
+    lines = new_block.split("\n")
+    inline_textnodes = []
+    for line in lines:
+        inline_textnodes.append(text_to_textnode(line)) 
+    
+    inline_leafnodes = []
+    for node in inline_textnodes:
+        inline_leafnodes.append(text_node_to_html_node(node))
+
+    heading_symbol = lines[0].split(" ", 1)[0].count("#")
+
+    header_element = ParentNode(f"{heading_symbol}", inline_leafnodes)
+    return header_element
+
+#NOTE: CODE has no inline markdown
+#TEST: Function requires testing!
+def block_to_code_element(block):
+    block_first_split = block.split("\n", 1)
+    block_second_split = block_first_split[1].rsplit("\n", 1)
+    new_block = block_second_split[1]
+
+    child_leafnode = LeafNode(tag = "code", value = new_block)
+    code_element = ParentNode("pre", child_leafnode)
+    return code_element
+
+#TEST: Function requires testing!
+def block_to_quote_element(block):
+    old_lines = block.split("\n")
+    new_lines = []
+    for line in old_lines:
+        temp = line.split("> ", 1)[1]
+        temp += "\n"
+        new_lines.append(temp)
+
+    new_block = ""
+    for line in new_lines:
+        new_block += line
+
+    paragraph_element = block_to_paragraph_element(new_block)
+
+    quote_element = ParentNode("quoteblock", paragraph_element)
+    return quote_element
+
+#TEST: Function requires testing!
+def block_to_unordered_list_element(block):
+    lines = block.split("\n")
+
+    list_items = []
+    for line in lines:
+        new_line = line.split("- ")[1]
+
+        inline_textnodes = text_to_textnode(new_line)
+        
+        inline_leafnodes = []
+        for textnode in inline_textnodes:
+            inline_leafnodes.append(text_node_to_html_node(textnode))
+
+        list_items.append(ParentNode("li", inline_leafnodes))
+
+    unordered_list_element = ParentNode("ul", list_items)
+    return unordered_list_element
+
+#TEST: Function requires testing!
+def block_to_ordered_list_element(block):
+    lines = block.split("\n")
+
+    list_items = []
+    for line in lines:
+        item_counter = 1
+        new_line = line.split(f"{item_counter}. ", 1)[1]
+
+        inline_textnodes = text_to_textnode(new_line)
+
+        inline_leafnodes = []
+        for textnode in inline_textnodes:
+            inline_leafnodes.append(text_node_to_html_node(textnode))
+
+        list_items.append(ParentNode("li", inline_leafnodes))
+        item_counter += 1
+
+    orderes_list_element = ParentNode("ol", list_items)
+    return orderes_list_element
 
 
+
+
+def markdown_to_html(markdown, function_debug = None):
+    
+    blocks = markdown_to_blocks(markdown)
+    markdown_children = []
+    for block in blocks:
+        match (block_to_block_type(block)):
+            case BlockType.PARAGRAPH:
+                markdown_children.append(block_to_paragraph_element(block))
+                break
+            case BlockType.HEADING:
+                markdown_children.append(block_to_header_element(block))
+                break
+            case BlockType.CODE:
+                markdown_children.append(block_to_header_element(block))
+                break
+            case BlockType.QUOTE:
+                markdown_children.append(block_to_quote_element(block))
+                break
+            case BlockType.UNORDERED_LIST:
+                markdown_children.append(block_to_unordered_list(block))
+                break
+            case BlockType.ORDERED_LIST:
+                markdown_children.append(block_to_ordered_list(block))
+                break
+
+
+    markdown_parent = ParentNode("div", markdown_children)
+    return markdown_parent
 
