@@ -1,6 +1,7 @@
 import unittest
 from textnode import TextNode, TextType
-from markdown_logic import split_nodes_delimiter, extract_markdown_images, extract_markdown_links, split_nodes_image, split_nodes_link, text_to_textnode
+from htmlnode import ParentNode, LeafNode
+from markdown_logic import split_nodes_delimiter, extract_markdown_images, extract_markdown_links, split_nodes_image, split_nodes_link, text_to_textnode, markdown_to_html
 
 class TestSplitDelimiter(unittest.TestCase):
     def test_split_nodes_delimiter_1_child(self):
@@ -236,6 +237,141 @@ class TestTextToTextNode(unittest.TestCase):
         text = "The **sunset** painted the _horizon_ in warm colors, while the `camera` captured the moment perfectly ![Golden Hour](https://example.com/sunset.jpg). Later, I checked the details [here](https://example.com/photography) and learned how to adjust `exposure` for better shots. Walking into the city, the **lights** reflected on the _wet streets_ ![City Reflections](https://example.com/city.jpg), making me think about optimizing my `render-lights()` function, which I read about [here](https://example.com/code-tips). Finally, standing by the _shore_, the **waves** rolled in rhythm ![Ocean Waves](https://example.com/ocean.jpg), and I logged the sound frequency using `analyze-wave()` from the guide [here](https://example.com/ocean-research)."
         split_nodes = text_to_textnode(text)
         self.assertListEqual(split_nodes, [TextNode("The ", TextType.TEXT),TextNode("sunset", TextType.BOLD),TextNode(" painted the ", TextType.TEXT),TextNode("horizon", TextType.ITALIC),TextNode(" in warm colors, while the ", TextType.TEXT),TextNode("camera", TextType.CODE),TextNode(" captured the moment perfectly ", TextType.TEXT),TextNode("Golden Hour", TextType.IMAGE, "https://example.com/sunset.jpg"),TextNode(". Later, I checked the details ", TextType.TEXT),TextNode("here", TextType.LINK, "https://example.com/photography"),TextNode(" and learned how to adjust ", TextType.TEXT),TextNode("exposure", TextType.CODE),TextNode(" for better shots. Walking into the city, the ", TextType.TEXT),TextNode("lights", TextType.BOLD),TextNode(" reflected on the ", TextType.TEXT),TextNode("wet streets", TextType.ITALIC),TextNode("City Reflections", TextType.IMAGE, "https://example.com/city.jpg"),TextNode(", making me think about optimizing my ", TextType.TEXT),TextNode("render-lights()", TextType.CODE),TextNode(" function, which I read about ", TextType.TEXT),TextNode("here", TextType.LINK, "https://example.com/code-tips"),TextNode(". Finally, standing by the ", TextType.TEXT),TextNode("shore", TextType.ITALIC),TextNode(", the ", TextType.TEXT),TextNode("waves", TextType.BOLD),TextNode(" rolled in rhythm ", TextType.TEXT),TextNode("Ocean Waves", TextType.IMAGE, "https://example.com/ocean.jpg"),TextNode(", and I logged the sound frequency using ", TextType.TEXT),TextNode("analyze-wave()", TextType.CODE),TextNode(" from the guide ", TextType.TEXT),TextNode("here", TextType.LINK, "https://example.com/ocean-research"),TextNode(".", TextType.TEXT)])
+
+
+
+class TestMarkdownToHTML(unittest.TestCase):
+
+    def test_paragraph_block(self):
+        block = """
+The forest stretched endlessly before us
+"""
+        html = markdown_to_html(block)
+        self.assertEqual(html.__repr__(), "ParentNode(div, [ParentNode(p, [LeafNode(None, The forest stretched endlessly before us, None)], None)], None)")
+        self.assertEqual(html.to_html(),"<div><p>The forest stretched endlessly before us</p></div>")
+    
+    def test_paragraph_block_multi_lines(self):
+        self.maxDiff = None
+
+        block = """
+The forest stretched endlessly before us
+its canopy a dense roof of green that filtered the sunlight into shifting patterns on the mossy ground
+"""
+        html = markdown_to_html(block)
+        self.assertEqual(html.__repr__(), "ParentNode(div, [ParentNode(p, [LeafNode(None, The forest stretched endlessly before us<br>, None), LeafNode(None, its canopy a dense roof of green that filtered the sunlight into shifting patterns on the mossy ground, None)], None)], None)")
+        self.assertEqual(html.to_html(),"<div><p>The forest stretched endlessly before us<br>its canopy a dense roof of green that filtered the sunlight into shifting patterns on the mossy ground</p></div>")
+
+    def test_paragraph_block_multi_lines2(self):
+        block = """
+The forest stretched endlessly before us
+its canopy a dense roof of green that filtered the sunlight into shifting patterns on the mossy ground
+the air carried the faint scent of pine and damp earth
+a distant bird call echoed softly through the trees
+while the leaves rustled gently in the passing breeze
+"""
+        html = markdown_to_html(block)
+        
+        test_leafnode1 = LeafNode(None, "The forest stretched endlessly before us<br>")
+        test_leafnode2 = LeafNode(None, "its canopy a dense roof of green that filtered the sunlight into shifting patterns on the mossy ground<br>")
+        test_leafnode3 = LeafNode(None, "the air carried the faint scent of pine and damp earth<br>")
+        test_leafnode4 = LeafNode(None, "a distant bird call echoed softly through the trees<br>")
+        test_leafnode5 = LeafNode(None, "while the leaves rustled gently in the passing breeze")
+        test_p_element = ParentNode("p", [test_leafnode1, test_leafnode2, test_leafnode3, test_leafnode4, test_leafnode5])
+        test_html = ParentNode("div", [test_p_element])
+        self.assertEqual(html, test_html)
+
+
+    def test_paragraph_block_single_line_multi_inline_markdown(self):
+        block = """
+The **forest** _stretched_ `endlessly before` us.
+"""
+        html = markdown_to_html(block)
+
+        test_leafnode1 = LeafNode(None, "The ")
+        test_leafnode2 = LeafNode("b", "forest")
+        test_leafnode3 = LeafNode("i", "stretched")
+        test_leafnode4 = LeafNode("code", "endlessly before")
+        test_leafnode5 = LeafNode(None, " us.")
+        test_p_element = ParentNode("p", [test_leafnode1, test_leafnode2, test_leafnode3, test_leafnode4, test_leafnode5])
+        test_html = ParentNode("div", [test_p_element])
+        self.assertEqual(html, test_html)
+
+
+
+    def test_paragraph_block_multi_line_multi_inline_markdown(self):
+        block = """
+The **forest** stretched endlessly before us with its _mystery_
+its canopy a _dense roof_ of green that filtered the sunlight into shifting patterns on the `mossy ground`
+the air carried the faint scent of **pine** and damp earth like a `whisper`
+a distant bird call echoed softly through the _trees_
+while the leaves rustled gently in the passing `breeze` beneath the **sky**
+"""
+        html = markdown_to_html(block)
+        
+        test_leafnodes1 = LeafNode(None, "The ")
+        test_leafnodes2 = LeafNode("b", "forest")
+        test_leafnodes3 = LeafNode(None, " stretched endlessly before us with its ")
+        test_leafnodes4 = LeafNode("i", "mystery")
+        test_leafnodes20 = LeafNode(None, "<br>")
+        test_leafnodes5 = LeafNode(None, "its canopy a ")
+        test_leafnodes6 = LeafNode("i", "dense roof")
+        test_leafnodes7 = LeafNode(None, " of green that filtered the sunlight into shifting patterns on the ")
+        test_leafnodes8 = LeafNode("code", "mossy ground")
+        test_leafnodes21 = LeafNode(None, "<br>")
+        test_leafnodes9 = LeafNode(None, "the air carried the faint scent of ")
+        test_leafnodes10 = LeafNode("b", "pine")
+        test_leafnodes11 = LeafNode(None, " and damp earth like a ")
+        test_leafnodes12 = LeafNode("code", "whisper")
+        test_leafnodes22 = LeafNode(None, "<br>")
+        test_leafnodes13 = LeafNode(None, "a distant bird call echoed softly through the ")
+        test_leafnodes14 = LeafNode("i", "trees")
+        test_leafnodes15 = LeafNode(None, "<br>")
+        test_leafnodes16 = LeafNode(None, "while the leaves rustled gently in the passing ")
+        test_leafnodes17 = LeafNode("code", "breeze")
+        test_leafnodes18 = LeafNode(None, " beneath the ")
+        test_leafnodes19 = LeafNode("b", "sky")
+        test_p_element = ParentNode("p", [
+            test_leafnodes1, 
+            test_leafnodes2,
+            test_leafnodes3,
+            test_leafnodes4,
+            test_leafnodes20,
+            test_leafnodes5,
+            test_leafnodes6,
+            test_leafnodes7,
+            test_leafnodes8,
+            test_leafnodes21,
+            test_leafnodes9,
+            test_leafnodes10,
+            test_leafnodes11,
+            test_leafnodes12,
+            test_leafnodes22,
+            test_leafnodes13,
+            test_leafnodes14,
+            test_leafnodes15,
+            test_leafnodes16,
+            test_leafnodes17,
+            test_leafnodes18,
+            test_leafnodes19
+        ])
+        test_html = ParentNode("div", [test_p_element])
+        self.assertEqual(html, test_html)
+
+
+    def test_heading_block(self):
+       pass 
+
+    def test_code_block(self):
+        pass
+
+    def test_quote_block(self):
+        pass
+
+    def test_unordered_list_block(self):
+        pass
+
+    def test_ordered_list_block(self):
+        pass
 
 
 if __name__ == "__main__":

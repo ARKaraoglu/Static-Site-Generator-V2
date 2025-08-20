@@ -191,16 +191,19 @@ def block_to_paragraph_element(block):
     inline_textnodes = []
     
 
+    line_break_counter = len(lines) - 1
     for line in lines:
         # If a <p> block has more than 1 line, then we add <br> at the end of each to merge them all under 1 <p> parent node to avoid excess space between lines
-        if len(lines) > 1:
+        if len(lines) > 1 and line_break_counter != 0:
             line += "<br>"
-        inline_textnodes.extend(text_to_textnode(line))
+            line_break_counter -= 1
 
+        inline_textnodes.extend(text_to_textnode(line))
+    
     inline_leafnodes = []
     for node in inline_textnodes:
         inline_leafnodes.append(text_node_to_html_node(node))
-
+    
     paragraph_element = ParentNode("p", inline_leafnodes)
     return paragraph_element
 
@@ -293,7 +296,7 @@ def block_to_ordered_list_element(block):
 
 
 
-
+#NOTE: In BlockType.PARAGRAPH, we add extra <br> at the end of each line of a block to put all the lines into a single p html element . This process might be required to be done at a later stage. 
 def markdown_to_html(markdown, function_debug = None):
     
     blocks = markdown_to_blocks(markdown)
@@ -313,10 +316,10 @@ def markdown_to_html(markdown, function_debug = None):
                 markdown_children.append(block_to_quote_element(block))
                 break
             case BlockType.UNORDERED_LIST:
-                markdown_children.append(block_to_unordered_list(block))
+                markdown_children.append(block_to_unordered_list_element(block))
                 break
             case BlockType.ORDERED_LIST:
-                markdown_children.append(block_to_ordered_list(block))
+                markdown_children.append(block_to_ordered_list_element(block))
                 break
 
 

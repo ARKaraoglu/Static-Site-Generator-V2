@@ -43,7 +43,7 @@ class LeafNode(HTMLNode):
         return f"LeafNode({self.tag}, {self.value}, {self.props})"
 
     def __eq__(self, other):
-        if isinstance(self, other) and self.tag == other.tag and self.value == other.value and self.props == other.props:
+        if isinstance(other, LeafNode) and self.tag == other.tag and self.value == other.value and self.props == other.props:
             return True
         return False
 
@@ -77,7 +77,7 @@ class ParentNode(HTMLNode):
         return f'ParentNode({self.tag}, {self.children}, {self.props})'
 
     def __eq__(self, other):
-        if isinstance(self, other) and self.tag == other.tag and self.children == other.children and self.props == other.props:
+        if isinstance(other, ParentNode) and self.tag == other.tag and self.children == other.children and self.props == other.props:
             return True
         return False
 
