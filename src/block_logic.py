@@ -10,6 +10,13 @@ class BlockType(Enum):
 
 
 def markdown_to_blocks(markdown):
+    #WARNING: Have to make an exception to code block for code block can have more than 1 new line between lines
+    first_line = markdown.split("\n", 1)[0]
+    first_word = first_line.split(" ", 1)[0]
+    if first_word == "```":
+        block = markdown
+        return [block]
+
     split_blocks = markdown.split("\n\n")
     final_blocks = []
     for block in split_blocks:
@@ -28,10 +35,9 @@ def block_to_block_type(block, function_debug = None):
             filtered_lines.append(line)
 
     if function_debug != None:
-        print(f"{block}\n{filtered_lines}")
+        print(f"block: {block}\n filtered lines: {filtered_lines}")
     
     first_line = filtered_lines[0]
-    
     if '# ' in first_line:
         for line in filtered_lines:
             if '# ' not in line:
@@ -46,6 +52,8 @@ def block_to_block_type(block, function_debug = None):
     if "```" in first_line:
         last_line = filtered_lines[len(filtered_lines) - 1]
         if last_line == "```":
+            if function_debug != None:
+                print("in here")
             return BlockType.CODE
 
 

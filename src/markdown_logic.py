@@ -234,18 +234,18 @@ def block_to_header_element(block, function_debug = None):
     header_element = ParentNode(f"h{heading_symbol}", inline_leafnodes)
     return header_element
 
-#BUG: if there is 2 or more lines, then put them into 2 header_elements. Currently they are put in 1
 #NOTE: CODE has no inline markdown
 #TEST: Function requires testing!
 def block_to_code_element(block):
-    block_first_split = block.split("\n", 1)
-    block_second_split = block_first_split[1].rsplit("\n", 1)
-    new_block = block_second_split[1]
-
+    # block_first_split = block.split("\n", 1)
+    # block_second_split = block_first_split[1].rsplit("\n", 1)
+    # new_block = block_second_split[1]
+    new_block = block.split("```")[1]
     child_leafnode = LeafNode(tag = "code", value = new_block)
-    code_element = ParentNode("pre", child_leafnode)
+    code_element = ParentNode("pre", [child_leafnode])
     return code_element
 
+#BUG: if there is 2 or more lines, then put them into 2 header_elements. Currently they are put in 1
 #TEST: Function requires testing!
 def block_to_quote_element(block):
     old_lines = block.split("\n")
@@ -264,6 +264,7 @@ def block_to_quote_element(block):
     quote_element = ParentNode("quoteblock", paragraph_element)
     return quote_element
 
+#BUG: if there is 2 or more lines, then put them into 2 header_elements. Currently they are put in 1
 #TEST: Function requires testing!
 def block_to_unordered_list_element(block):
     lines = block.split("\n")
@@ -312,6 +313,8 @@ def markdown_to_html(markdown, function_debug = None):
     blocks = markdown_to_blocks(markdown)
     markdown_children = []
     for block in blocks:
+        if function_debug != None:
+            print(block_to_block_type(block, True))
         match (block_to_block_type(block)):
             case BlockType.PARAGRAPH:
                 markdown_children.append(block_to_paragraph_element(block))
@@ -320,7 +323,7 @@ def markdown_to_html(markdown, function_debug = None):
                 markdown_children.append(block_to_header_element(block, function_debug))
                 break
             case BlockType.CODE:
-                markdown_children.append(block_to_header_element(block))
+                markdown_children.append(block_to_code_element(block))
                 break
             case BlockType.QUOTE:
                 markdown_children.append(block_to_quote_element(block))

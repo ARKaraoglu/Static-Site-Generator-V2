@@ -442,7 +442,74 @@ while the leaves rustled gently in the passing `breeze` beneath the **sky**
         self.assertEqual(html, test_html)
     
     def test_code_block(self):
-        pass
+        block = """```
+#include <stdio.h>
+
+int main(void) {
+    printf("Hello, world!\n");
+
+    int x = 10;
+    int y = 20;
+    printf("Sum: %d\n", x + y);
+
+    return 0;
+}
+```
+"""
+        html = markdown_to_html(block)
+        test_leafnode1 = LeafNode("code", """
+#include <stdio.h>
+
+int main(void) {
+    printf("Hello, world!\n");
+
+    int x = 10;
+    int y = 20;
+    printf("Sum: %d\n", x + y);
+
+    return 0;
+}
+"""
+)
+        test_code_element = ParentNode("pre", [test_leafnode1])
+        test_html = ParentNode("div", [test_code_element])
+        self.assertEqual(html, test_html)
+   
+
+    def test_code_block_incorrect(self):
+        block = """```
+#include <stdio.h>
+
+int main(void) {
+    printf("Hello, world!\n");
+
+    int x = 10;
+    int y = 20;
+    printf("Sum: %d\n", x + y);
+
+    return 0;
+}
+```
+"""
+        html = markdown_to_html(block)
+        test_leafnode1 = LeafNode("code", """
+#include <stdio.h>
+
+int main(void) {
+    printf("Hello, world!\n");
+
+    int x = 10;
+    int y = 20;
+    printf("Sum: %d\n", x + y);
+
+    return 0;}
+"""
+)
+        test_code_element = ParentNode("pre", [test_leafnode1])
+        test_html = ParentNode("div", [test_code_element])
+        self.assertNotEqual(html, test_html)
+   
+
 
     def test_quote_block(self):
         pass
