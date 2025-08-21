@@ -137,7 +137,7 @@ def split_nodes_link(old_nodes):
     return new_nodes
 
 
-def text_to_textnode(text):
+def text_to_textnode(text, function_debug = None):
     t_nodes = [TextNode(text, TextType.TEXT)]
 
     detected_delimiter = True
@@ -185,11 +185,15 @@ def text_to_textnode(text):
         t_nodes = temp_node_list
     return t_nodes
 
+#NOTE: Initial Testing Done!
 #TEST: Function requires testing!
-def block_to_paragraph_element(block):
+def block_to_paragraph_element(block, function_debug = None):
     lines = block.split("\n")
     inline_textnodes = []
     
+    if function_debug != None:
+        print(f"inside block_to_paragraph_element function")
+        
 
     line_break_counter = len(lines) - 1
     for line in lines:
@@ -207,24 +211,30 @@ def block_to_paragraph_element(block):
     paragraph_element = ParentNode("p", inline_leafnodes)
     return paragraph_element
 
+#NOTE: Initial Testing Done!
 #TEST: Function requires testing!
-def block_to_header_element(block):
-    block_first_split = block.split("#", 1)
+def block_to_header_element(block, function_debug = None):
+    block_first_split = block.split(" ", 1)
     new_block = block_first_split[1]
     lines = new_block.split("\n")
     inline_textnodes = []
     for line in lines:
-        inline_textnodes.append(text_to_textnode(line)) 
+        inline_textnodes.extend(text_to_textnode(line, function_debug)) 
     
     inline_leafnodes = []
+    
+    if function_debug != None:
+        print(f"\n{block_first_split}\n")
+    
     for node in inline_textnodes:
         inline_leafnodes.append(text_node_to_html_node(node))
 
-    heading_symbol = lines[0].split(" ", 1)[0].count("#")
+    heading_symbol = block_first_split[0].count("#")
 
-    header_element = ParentNode(f"{heading_symbol}", inline_leafnodes)
+    header_element = ParentNode(f"h{heading_symbol}", inline_leafnodes)
     return header_element
 
+#BUG: if there is 2 or more lines, then put them into 2 header_elements. Currently they are put in 1
 #NOTE: CODE has no inline markdown
 #TEST: Function requires testing!
 def block_to_code_element(block):
@@ -307,7 +317,7 @@ def markdown_to_html(markdown, function_debug = None):
                 markdown_children.append(block_to_paragraph_element(block))
                 break
             case BlockType.HEADING:
-                markdown_children.append(block_to_header_element(block))
+                markdown_children.append(block_to_header_element(block, function_debug))
                 break
             case BlockType.CODE:
                 markdown_children.append(block_to_header_element(block))

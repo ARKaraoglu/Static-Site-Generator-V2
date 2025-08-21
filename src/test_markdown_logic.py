@@ -358,9 +358,89 @@ while the leaves rustled gently in the passing `breeze` beneath the **sky**
         self.assertEqual(html, test_html)
 
 
-    def test_heading_block(self):
-       pass 
+    def test_heading_block_h1(self):
+        block = """
+# Heading 1
+"""
+        html = markdown_to_html(block)
 
+        test_leafnode1 = LeafNode(None, "Heading 1")
+        test_heading_element = ParentNode("h1", [test_leafnode1])
+        test_html = ParentNode("div", [test_heading_element])
+        self.assertEqual(html, test_html)
+
+    def test_heading_block_h2(self):
+        block = """
+## Heading 2
+"""
+        html = markdown_to_html(block)
+
+        test_leafnode1 = LeafNode(None, "Heading 2")
+        test_heading_element = ParentNode("h2", [test_leafnode1])
+        test_html = ParentNode("div", [test_heading_element])
+        self.assertEqual(html, test_html)
+    
+
+    def test_heading_block_h3(self):
+        block = """
+### Heading 3
+"""
+        html = markdown_to_html(block)
+
+        test_leafnode1 = LeafNode(None, "Heading 3")
+        test_heading_element = ParentNode("h3", [test_leafnode1])
+        test_html = ParentNode("div", [test_heading_element])
+        self.assertEqual(html, test_html)
+    
+
+    def test_heading_block_h4(self):
+        block = """
+#### Heading 4
+"""
+        html = markdown_to_html(block)
+
+        test_leafnode1 = LeafNode(None, "Heading 4")
+        test_heading_element = ParentNode("h4", [test_leafnode1])
+        test_html = ParentNode("div", [test_heading_element])
+        self.assertEqual(html, test_html)
+
+    def test_heading_block_h5(self):
+        block = """
+##### Heading 5
+"""
+        html = markdown_to_html(block)
+
+        test_leafnode1 = LeafNode(None, "Heading 5")
+        test_heading_element = ParentNode("h5", [test_leafnode1])
+        test_html = ParentNode("div", [test_heading_element])
+        self.assertEqual(html, test_html)
+    
+    def test_heading_block_h6(self):
+        block = """
+###### Heading 6
+"""
+        html = markdown_to_html(block)
+
+        test_leafnode1 = LeafNode(None, "Heading 6")
+        test_heading_element = ParentNode("h6", [test_leafnode1])
+        test_html = ParentNode("div", [test_heading_element])
+        self.assertEqual(html, test_html)
+    
+    def test_heading_block_h3_multi_inline_markdown(self):
+        block = """
+### _This_ is a **Heading 3** with 3 `inline markdowns`
+"""
+        html = markdown_to_html(block)
+
+        test_leafnode1 = LeafNode("i", "This")
+        test_leafnode2 = LeafNode(None, " is a ")
+        test_leafnode3 = LeafNode("b", "Heading 3")
+        test_leafnode4 = LeafNode(None, " with 3 ")
+        test_leafnode5 = LeafNode("code", "inline markdowns")
+        test_heading_element = ParentNode("h3", [test_leafnode1, test_leafnode2, test_leafnode3, test_leafnode4, test_leafnode5])
+        test_html = ParentNode("div", [test_heading_element])
+        self.assertEqual(html, test_html)
+    
     def test_code_block(self):
         pass
 
