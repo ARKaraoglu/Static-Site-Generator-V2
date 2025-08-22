@@ -512,8 +512,92 @@ int main(void) {
 
 
     def test_quote_block(self):
-        pass
+        block = """
+> quote 1
+"""
+        html = markdown_to_html(block)
 
+        test_leafnode1 = LeafNode(None, "quote 1")
+        test_paragraph_element = ParentNode("p", [test_leafnode1])
+        test_quote_element = ParentNode("blockquote", [test_paragraph_element])
+        test_html = ParentNode("div", [test_quote_element])
+        self.assertEqual(html, test_html)
+
+    def test_quote_block_multi_line(self):
+        block = """
+> quote 1
+> quote 2
+> quote 3
+> quote 4
+> quote 5
+"""
+        html = markdown_to_html(block)
+
+        test_leafnode1 = LeafNode(None, "quote 1<br>")
+        test_leafnode2 = LeafNode(None, "quote 2<br>")
+        test_leafnode3 = LeafNode(None, "quote 3<br>")
+        test_leafnode4 = LeafNode(None, "quote 4<br>")
+        test_leafnode5 = LeafNode(None, "quote 5")
+        test_paragraph_element = ParentNode("p", [test_leafnode1, test_leafnode2, test_leafnode3, test_leafnode4, test_leafnode5])
+        test_quote_element = ParentNode("blockquote", [test_paragraph_element])
+        test_html = ParentNode("div", [test_quote_element])
+        self.assertEqual(html, test_html)
+    
+    def test_quote_block_multi_line_multi_inline_markdown(self):
+        block = """
+> This is a **bold** statement inside a quote
+> Sometimes we use _italic_ text for emphasis
+> You can even insert `inline code` within quotes
+> Quotes can also contain [links](https://example.com)
+> And even an ![image](https://via.placeholder.com/100) if you like
+"""
+        html = markdown_to_html(block)
+
+        test_leafnode1 = LeafNode(None, "This is a ")
+        test_leafnode2 = LeafNode("b", "bold")
+        test_leafnode3 = LeafNode(None, " statement inside a quote<br>")
+        test_leafnode4 = LeafNode(None, "Sometimes we use ")
+        test_leafnode5 = LeafNode("i", "italic")
+        test_leafnode6 = LeafNode(None, " text for emphasis<br>")
+        test_leafnode7 = LeafNode(None, "You can even insert ")
+        test_leafnode8 = LeafNode("code", "inline code")
+        test_leafnode9 = LeafNode(None, " within quotes<br>")
+        test_leafnode10 = LeafNode(None, "Quotes can also contain ")
+        test_leafnode11 = LeafNode("a", "links", {"href": "https://example.com"})
+        test_leafnode12 = LeafNode(None, "<br>")
+        test_leafnode13 = LeafNode(None, "And even an ")
+        test_leafnode14 = LeafNode("img", "", {"src": "https://via.placeholder.com/100", "alt": "image"})
+        test_leafnode15 = LeafNode(None, " if you like")
+        
+        test_paragraph_element = ParentNode("p", [test_leafnode1, test_leafnode2, test_leafnode3, test_leafnode4, test_leafnode5, test_leafnode6, test_leafnode7, test_leafnode8, test_leafnode9, test_leafnode10, test_leafnode11, test_leafnode12, test_leafnode13, test_leafnode14, test_leafnode15 ])
+        test_quote_element = ParentNode("blockquote", [test_paragraph_element])
+        test_html = ParentNode("div", [test_quote_element])
+        self.assertEqual(html, test_html)
+
+    def test_quote_block_multi_line_plus_empty_line(self):
+        block = """
+> quote 1
+> quote 2
+> quote 3
+> 
+> 
+> quote 4
+> quote 5
+"""
+        html = markdown_to_html(block)
+
+        test_leafnode1 = LeafNode(None, "quote 1<br>")
+        test_leafnode2 = LeafNode(None, "quote 2<br>")
+        test_leafnode3 = LeafNode(None, "quote 3<br>")
+        test_leafnode4 = LeafNode(None, "<br>")
+        test_leafnode5 = LeafNode(None, "<br>")
+        test_leafnode6 = LeafNode(None, "quote 4<br>")
+        test_leafnode7 = LeafNode(None, "quote 5")
+        test_paragraph_element = ParentNode("p", [test_leafnode1, test_leafnode2, test_leafnode3, test_leafnode4, test_leafnode5, test_leafnode6, test_leafnode7])
+        test_quote_element = ParentNode("blockquote", [test_paragraph_element])
+        test_html = ParentNode("div", [test_quote_element])
+        self.assertEqual(html, test_html)
+    
     def test_unordered_list_block(self):
         pass
 

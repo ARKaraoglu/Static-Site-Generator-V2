@@ -245,23 +245,26 @@ def block_to_code_element(block):
     code_element = ParentNode("pre", [child_leafnode])
     return code_element
 
-#BUG: if there is 2 or more lines, then put them into 2 header_elements. Currently they are put in 1
 #TEST: Function requires testing!
 def block_to_quote_element(block):
     old_lines = block.split("\n")
     new_lines = []
+    line_counter = len(old_lines) - 1
     for line in old_lines:
         temp = line.split("> ", 1)[1]
-        temp += "\n"
-        new_lines.append(temp)
+        
+        if line_counter != 0:
+            temp += "\n"
+            line_counter -= 1
 
+        new_lines.append(temp)
     new_block = ""
     for line in new_lines:
         new_block += line
 
     paragraph_element = block_to_paragraph_element(new_block)
 
-    quote_element = ParentNode("quoteblock", paragraph_element)
+    quote_element = ParentNode("blockquote", [paragraph_element])
     return quote_element
 
 #BUG: if there is 2 or more lines, then put them into 2 header_elements. Currently they are put in 1
