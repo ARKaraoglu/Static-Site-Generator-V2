@@ -599,8 +599,122 @@ int main(void) {
         self.assertEqual(html, test_html)
     
     def test_unordered_list_block(self):
-        pass
+        block = """
+- Unordered list item 1
+"""
+        html = markdown_to_html(block)
 
+        test_leafnode1 = LeafNode(None, "Unordered list item 1")
+        test_list_items = ParentNode("li", [test_leafnode1])
+        test_ulist_element = ParentNode("ul", [test_list_items])
+        test_html = ParentNode("div", [test_ulist_element])
+
+        self.assertEqual(html, test_html)
+
+
+    def test_unordered_list_block_multi_line(self):
+        block = """
+- Unordered list item 1
+- Unordered list item 2
+- Unordered list item 3
+- Unordered list item 4
+- Unordered list item 5
+- Unordered list item 6
+"""
+        html = markdown_to_html(block)
+
+        test_ln1 = LeafNode(None, "Unordered list item 1")
+        test_ln2 = LeafNode(None, "Unordered list item 2")
+        test_ln3 = LeafNode(None, "Unordered list item 3")
+        test_ln4 = LeafNode(None, "Unordered list item 4")
+        test_ln5 = LeafNode(None, "Unordered list item 5")
+        test_ln6 = LeafNode(None, "Unordered list item 6")
+        test_list_item1 = ParentNode("li", [test_ln1])
+        test_list_item2 = ParentNode("li", [test_ln2])
+        test_list_item3 = ParentNode("li", [test_ln3])
+        test_list_item4 = ParentNode("li", [test_ln4])
+        test_list_item5 = ParentNode("li", [test_ln5])
+        test_list_item6 = ParentNode("li", [test_ln6])
+        test_unordered_list_element = ParentNode("ul", [test_list_item1, test_list_item2, test_list_item3, test_list_item4, test_list_item5, test_list_item6])
+        test_html = ParentNode("div", [test_unordered_list_element])
+        self.assertEqual(html, test_html)
+
+    def test_unordered_list_block_multi_line2(self):
+        block = """
+- **Unordered** list item 1
+- Unordered list item with _italic_ text 2
+- Unordered list item 3 and some `inline code`
+- **Bold** and _italic_ mixed in list item 4
+- Unordered list item 5 with a [link](https://example.com)
+- Final item 6 with an ![image](https://via.placeholder.com/50)
+"""
+    
+        html = markdown_to_html(block)
+
+        test_ln1 = LeafNode("b", "Unordered")
+        test_ln2 = LeafNode(None, " list item 1")
+        test_ln3 = LeafNode(None, "Unordered list item with ")
+        test_ln4 = LeafNode("i", "italic")
+        test_ln5 = LeafNode(None, " text 2")
+        test_ln6 = LeafNode(None, "Unordered list item 3 and some ")
+        test_ln7 = LeafNode("code", "inline code")
+        test_ln8 = LeafNode("b", "Bold")
+        test_ln9 = LeafNode(None, " and ")
+        test_ln10 = LeafNode("i", "italic")
+        test_ln11 = LeafNode(None, " mixed in list item 4")
+        test_ln12 = LeafNode(None, "Unordered list item 5 with a ")
+        test_ln13 = LeafNode("a", "link", {"href": "https://example.com"})
+        test_ln14 = LeafNode(None, "Final item 6 with an ")
+        test_ln15 = LeafNode("img", "", {"src": "https://via.placeholder.com/50", "alt": "image"})
+        
+        test_li1 = ParentNode("li", [test_ln1, test_ln2])
+        test_li2 = ParentNode("li", [test_ln3, test_ln4, test_ln5])
+        test_li3 = ParentNode("li", [test_ln6, test_ln7])
+        test_li4 = ParentNode("li", [test_ln8, test_ln9, test_ln10, test_ln11])
+        test_li5 = ParentNode("li", [test_ln12, test_ln13])
+        test_li6 = ParentNode("li", [test_ln14, test_ln15])
+        test_ul_element = ParentNode("ul", [test_li1, test_li2, test_li3, test_li4, test_li5, test_li6])
+        test_html = ParentNode("div", [test_ul_element])
+        self.assertEqual(html, test_html)
+
+
+    def test_unordered_list_block_multi_line3(self):
+        block = """
+- **Unordered** list item 1
+- Unordered list item with _italic_ text 2
+- 
+- **Bold** and _italic_ mixed in list item 4
+- Unordered list item 5 with a [link](https://example.com)
+- Final item 6 with an ![image](https://via.placeholder.com/50)
+"""
+    
+        html = markdown_to_html(block)
+
+        test_ln1 = LeafNode("b", "Unordered")
+        test_ln2 = LeafNode(None, " list item 1")
+        test_ln3 = LeafNode(None, "Unordered list item with ")
+        test_ln4 = LeafNode("i", "italic")
+        test_ln5 = LeafNode(None, " text 2")
+        test_ln6 = LeafNode(None, "")
+        test_ln8 = LeafNode("b", "Bold")
+        test_ln9 = LeafNode(None, " and ")
+        test_ln10 = LeafNode("i", "italic")
+        test_ln11 = LeafNode(None, " mixed in list item 4")
+        test_ln12 = LeafNode(None, "Unordered list item 5 with a ")
+        test_ln13 = LeafNode("a", "link", {"href": "https://example.com"})
+        test_ln14 = LeafNode(None, "Final item 6 with an ")
+        test_ln15 = LeafNode("img", "", {"src": "https://via.placeholder.com/50", "alt": "image"})
+        
+        test_li1 = ParentNode("li", [test_ln1, test_ln2])
+        test_li2 = ParentNode("li", [test_ln3, test_ln4, test_ln5])
+        test_li3 = ParentNode("li", [test_ln6])
+        test_li4 = ParentNode("li", [test_ln8, test_ln9, test_ln10, test_ln11])
+        test_li5 = ParentNode("li", [test_ln12, test_ln13])
+        test_li6 = ParentNode("li", [test_ln14, test_ln15])
+        test_ul_element = ParentNode("ul", [test_li1, test_li2, test_li3, test_li4, test_li5, test_li6])
+        test_html = ParentNode("div", [test_ul_element])
+        self.assertEqual(html, test_html)
+    
     def test_ordered_list_block(self):
         pass
 
