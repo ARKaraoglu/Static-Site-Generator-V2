@@ -716,6 +716,112 @@ int main(void) {
         self.assertEqual(html, test_html)
     
     def test_ordered_list_block(self):
+        block = """
+1. List item 1
+"""
+
+        html = markdown_to_html(block)
+
+        test_ln1 = LeafNode(None, "List item 1")
+        test_li1 = ParentNode("li", [test_ln1])
+        test_ol_element = ParentNode("ol", [test_li1])
+        test_html = ParentNode("div", [test_ol_element])
+        self.assertEqual(html, test_html)
+
+    def test_ordered_list_block_multi_line(self):
+        block = """
+1. list item 1
+2. list item 2
+3. list item 3
+4. list item 4
+5. list item 5
+"""
+        html = markdown_to_html(block)
+
+        test_lf1 = LeafNode(None, "list item 1")
+        test_lf2 = LeafNode(None, "list item 2")
+        test_lf3 = LeafNode(None, "list item 3")
+        test_lf4 = LeafNode(None, "list item 4")
+        test_lf5 = LeafNode(None, "list item 5")
+
+        test_li1 = ParentNode("li", [test_lf1])
+        test_li2 = ParentNode("li", [test_lf2])
+        test_li3 = ParentNode("li", [test_lf3])
+        test_li4 = ParentNode("li", [test_lf4])
+        test_li5 = ParentNode("li", [test_lf5])
+
+        test_ol_element = ParentNode("ol", [test_li1, test_li2, test_li3, test_li4, test_li5])
+        test_html = ParentNode("div", [test_ol_element])
+        self.assertEqual(html, test_html)
+
+    def test_ordered_list_block_multi_line_multi_inline_markdown(self):
+        block = """
+1. **list item 1**
+2. list item 2 with _italic_ text
+3. list item 3 and some `inline code`
+4. **Bold** and _italic_ mixed in list item 4
+5. list item 5 with `code` snippet
+6. list item 6 with a [useful link](https://example.com) and ![small image](https://via.placeholder.com/30)
+"""
+        html = markdown_to_html(block)
+
+        test_ln1 = LeafNode("b", "list item 1")
+        test_ln2 = LeafNode(None, "list item 2 with ")
+        test_ln3 = LeafNode("i", "italic")
+        test_ln4 = LeafNode(None, " text")
+        test_ln5 = LeafNode(None, "list item 3 and some ")
+        test_ln6 = LeafNode("code", "inline code")
+        test_ln7 = LeafNode("b", "Bold")
+        test_ln8 = LeafNode(None, " and ")
+        test_ln9 = LeafNode("i", "italic")
+        test_ln10 = LeafNode(None, " mixed in list item 4")
+        test_ln11 = LeafNode(None, "list item 5 with ")
+        test_ln12 = LeafNode("code", "code")
+        test_ln13 = LeafNode(None, " snippet")
+        test_ln14 = LeafNode(None, "list item 6 with a ")
+        test_ln15 = LeafNode("a", "useful link", {"href": "https://example.com"})
+        test_ln16 = LeafNode(None, " and ")
+        test_ln17 = LeafNode("img", "", {"src": "https://via.placeholder.com/30", "alt": "small image"})
+
+        test_li1 = ParentNode("li", [test_ln1])
+        test_li2 = ParentNode("li", [test_ln2, test_ln3, test_ln4])
+        test_li3 = ParentNode("li", [test_ln5, test_ln6])
+        test_li4 = ParentNode("li", [test_ln7, test_ln8, test_ln9, test_ln10])
+        test_li5 = ParentNode("li", [test_ln11, test_ln12, test_ln13])
+        test_li6 = ParentNode("li", [test_ln14, test_ln15, test_ln16, test_ln17])
+
+        test_ol_element = ParentNode("ol", [test_li1, test_li2, test_li3, test_li4, test_li5, test_li6])
+        test_html = ParentNode("div", [test_ol_element])
+        self.assertEqual(html, test_html)
+
+    def test_ordered_list_block_multi_line2(self):
+        block = """
+1. list item 1
+2. list item 2
+3. 
+4. list item 4
+5. list item 5
+"""
+        html = markdown_to_html(block)
+
+        test_lf1 = LeafNode(None, "list item 1")
+        test_lf2 = LeafNode(None, "list item 2")
+        test_lf3 = LeafNode(None, "")
+        test_lf4 = LeafNode(None, "list item 4")
+        test_lf5 = LeafNode(None, "list item 5")
+
+        test_li1 = ParentNode("li", [test_lf1])
+        test_li2 = ParentNode("li", [test_lf2])
+        test_li3 = ParentNode("li", [test_lf3])
+        test_li4 = ParentNode("li", [test_lf4])
+        test_li5 = ParentNode("li", [test_lf5])
+
+        test_ol_element = ParentNode("ol", [test_li1, test_li2, test_li3, test_li4, test_li5])
+        test_html = ParentNode("div", [test_ol_element])
+        self.assertEqual(html, test_html)
+
+
+    def test_markdown_to_html_eq(self):
         pass
 
 

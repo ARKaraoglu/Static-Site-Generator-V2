@@ -269,6 +269,7 @@ def block_to_quote_element(block):
     quote_element = ParentNode("blockquote", [paragraph_element])
     return quote_element
 
+#NOTE: Initial Testing Done!
 #TEST: Function requires testing!
 def block_to_unordered_list_element(block):
     lines = block.split("\n")
@@ -293,8 +294,8 @@ def block_to_ordered_list_element(block):
     lines = block.split("\n")
 
     list_items = []
+    item_counter = 1
     for line in lines:
-        item_counter = 1
         new_line = line.split(f"{item_counter}. ", 1)[1]
 
         inline_textnodes = text_to_textnode(new_line)
