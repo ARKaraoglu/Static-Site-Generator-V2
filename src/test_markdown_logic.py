@@ -457,8 +457,7 @@ int main(void) {
 ```
 """
         html = markdown_to_html(block)
-        test_leafnode1 = LeafNode("code", """
-#include <stdio.h>
+        test_leafnode1 = LeafNode("code", """#include <stdio.h>
 
 int main(void) {
     printf("Hello, world!\n");
@@ -821,9 +820,143 @@ int main(void) {
         self.assertEqual(html, test_html)
 
 
-    def test_markdown_to_html_eq(self):
-        pass
+    def test_markdown_to_html_paragraph_to_html(self):
+        md = """
+This is **bolded** paragraph
+text in a p
+tag here
 
+This is another paragraph with _italic_ text and `code` here
+
+"""
+
+        html = markdown_to_html(md)
+        self.assertEqual(html.to_html(),"<div><p>This is <b>bolded</b> paragraph<br>text in a p<br>tag here</p><p>This is another paragraph with <i>italic</i> text and <code>code</code> here</p></div>")
+
+    def test_markdown_to_html_heading_to_html(self):
+        markdown = """
+# Heading 1
+
+## Heading 2
+
+### Heading 3
+
+#### Heading 4
+
+##### Heading 5
+
+###### Heading 6
+
+####### Not Heading
+"""
+        html = markdown_to_html(markdown)
+        self.assertEqual(html.to_html(), "<div><h1>Heading 1</h1><h2>Heading 2</h2><h3>Heading 3</h3><h4>Heading 4</h4><h5>Heading 5</h5><h6>Heading 6</h6><p>####### Not Heading</p></div>")
+
+    def test_markdown_to_html_code_to_html(self):
+        md="""
+```
+This is text that _should_ remain
+the **same** even with inline stuff
+```
+"""
+        html = markdown_to_html(md)
+        self.assertEqual(
+            html.to_html(),
+            "<div><pre><code>This is text that _should_ remain\nthe **same** even with inline stuff\n</code></pre></div>",
+        )
+
+    def test_markdown_to_html_quote_to_html(self):
+        markdown = """
+> quote 1
+> quote 2
+> quote 3
+> quote 4
+> quote 5
+> quote 6
+
+This is a paragraph
+"""
+
+        html = markdown_to_html(markdown)
+        self.assertEqual(html.to_html(), "<div><blockquote><p>quote 1<br>quote 2<br>quote 3<br>quote 4<br>quote 5<br>quote 6</p></blockquote><p>This is a paragraph</p></div>")
+
+
+    def test_markdown_to_html_unordered_list_to_html(self):
+        markdown = """
+- Unordered list item 1
+- Unordered list item 2
+- Unordered list item 3
+- Unordered list item 4
+- Unordered list item 5
+- Unordered list item 6
+
+This is a paragraph
+"""
+        html = markdown_to_html(markdown)
+        self.assertEqual(html.to_html(), "<div><ul><li>Unordered list item 1</li><li>Unordered list item 2</li><li>Unordered list item 3</li><li>Unordered list item 4</li><li>Unordered list item 5</li><li>Unordered list item 6</li></ul><p>This is a paragraph</p></div>")
+    
+    def test_markdown_to_html_ordered_list_to_html(self):
+        markdown = """
+1. Ordered list item 1
+2. Ordered list item 2
+3. Ordered list item 3
+4. Ordered list item 4
+5. Ordered list item 5
+6. Ordered list item 6
+
+This is a paragraph
+"""
+        html = markdown_to_html(markdown)
+        self.assertEqual(html.to_html(), "<div><ol><li>Ordered list item 1</li><li>Ordered list item 2</li><li>Ordered list item 3</li><li>Ordered list item 4</li><li>Ordered list item 5</li><li>Ordered list item 6</li></ol><p>This is a paragraph</p></div>")
+
+    def test_markdown_to_html_markdown_to_html(self):
+        markdown = """
+# Main Heading
+
+This is a **paragraph** with some _italic_ and **bold** text, along with `inline code`.
+It continues here to make sure the paragraph spans multiple sentences.
+
+## Subheading
+
+> This is a blockquote that includes **bold emphasis**.
+> It continues onto another line with _italic words_ and even `inline code`.
+> Blockquotes can be multiple lines of quoted text.
+
+### Lists Section
+
+Here is an unordered list:
+
+- First item with **bold** text
+- Second item with _italic_ text
+- Third item with `inline code` included
+
+And here is an ordered list:
+
+1. Ordered item one with a [link](https://example.com)
+2. Ordered item two with an ![image](https://via.placeholder.com/50)
+3. Ordered item three with **bold** and _italic_ text
+
+### Code Block
+
+Here is a C code block:
+
+```
+#include <stdio.h>
+
+int main() {
+    printf("Hello, Markdown World!\\n");
+    return 0;
+}
+```
+
+### Images and Links
+
+Here is a sentence with an inline [link](https://openai.com).
+And here is an image: ![Placeholder](https://via.placeholder.com/100)
+"""
+
+        html = markdown_to_html(markdown)
+        self.assertEqual(html.to_html(), '<div><h1>Main Heading</h1><p>This is a <b>paragraph</b> with some <i>italic</i> and <b>bold</b> text, along with <code>inline code</code>.<br>It continues here to make sure the paragraph spans multiple sentences.</p><h2>Subheading</h2><blockquote><p>This is a blockquote that includes <b>bold emphasis</b>.<br>It continues onto another line with <i>italic words</i> and even <code>inline code</code>.<br>Blockquotes can be multiple lines of quoted text.</p></blockquote><h3>Lists Section</h3><p>Here is an unordered list:</p><ul><li>First item with <b>bold</b> text</li><li>Second item with <i>italic</i> text</li><li>Third item with <code>inline code</code> included</li></ul><p>And here is an ordered list:</p><ol><li>Ordered item one with a <a href="https://example.com">link</a></li><li>Ordered item two with an <img src="https://via.placeholder.com/50" alt="image"></img></li><li>Ordered item three with <b>bold</b> and <i>italic</i> text</li></ol><h3>Code Block</h3><p>Here is a C code block:</p><pre><code>#include <stdio.h>\n\nint main() {\n    printf("Hello, Markdown World!\\n");\n    return 0;\n}\n</code></pre><h3>Images and Links</h3><p>Here is a sentence with an inline <a href="https://openai.com">link</a>.<br>And here is an image: <img src="https://via.placeholder.com/100" alt="Placeholder"></img></p></div>')
 
 if __name__ == "__main__":
     unittest.main()

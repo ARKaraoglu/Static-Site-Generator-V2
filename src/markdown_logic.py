@@ -16,7 +16,7 @@ def split_nodes_delimiter(old_nodes, delimiter, text_type):
         split_values = node.text.split(delimiter)
         # If No matching delimiters found, the length of the values list will be dividable by 2.
         if len(split_values) % 2 == 0:
-            raise Exception(f"No Matching delimiters!\n    Text: {node.text}\n    Split_Values: {split_values}\n")
+            raise Exception(f"No Matching delimiters!\n    Text: {node.text}\n    Split_Values: {split_values}\n    Text Type: {text_type}\n")
 
         for x in range(0, len(split_values)):
             # If a value is empty or full of empty space, we skip
@@ -242,7 +242,8 @@ def block_to_code_element(block):
     # block_second_split = block_first_split[1].rsplit("\n", 1)
     # new_block = block_second_split[1]
     new_block = block.split("```")[1]
-    child_leafnode = LeafNode(tag = "code", value = new_block)
+
+    child_leafnode = LeafNode(tag = "code", value = new_block.split("\n", 1)[1])
     code_element = ParentNode("pre", [child_leafnode])
     return code_element
 
@@ -315,30 +316,30 @@ def block_to_ordered_list_element(block):
 #NOTE: In BlockType.PARAGRAPH, we add extra <br> at the end of each line of a block to put all the lines into a single p html element . This process might be required to be done at a later stage. 
 def markdown_to_html(markdown, function_debug = None):
     
+    #BUG: markdown_to_blocks have a bug
     blocks = markdown_to_blocks(markdown)
+    if function_debug != None:
+        print(blocks)
     markdown_children = []
     for block in blocks:
         if function_debug != None:
-            print(block_to_block_type(block, True))
+            print(f"\n{block}")
+            print(f"{block_to_block_type(block, function_debug)}\n")
+        # if function_debug != None:
+        #     print(block_to_block_type(block, True))
         match (block_to_block_type(block)):
             case BlockType.PARAGRAPH:
                 markdown_children.append(block_to_paragraph_element(block))
-                break
             case BlockType.HEADING:
-                markdown_children.append(block_to_header_element(block, function_debug))
-                break
+                markdown_children.append(block_to_header_element(block))
             case BlockType.CODE:
                 markdown_children.append(block_to_code_element(block))
-                break
             case BlockType.QUOTE:
                 markdown_children.append(block_to_quote_element(block))
-                break
             case BlockType.UNORDERED_LIST:
                 markdown_children.append(block_to_unordered_list_element(block))
-                break
             case BlockType.ORDERED_LIST:
                 markdown_children.append(block_to_ordered_list_element(block))
-                break
 
 
     markdown_parent = ParentNode("div", markdown_children)

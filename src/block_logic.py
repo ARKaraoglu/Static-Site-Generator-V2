@@ -8,22 +8,60 @@ class BlockType(Enum):
     UNORDERED_LIST = "unordered_list"
     ORDERED_LIST = "ordered_list"
 
-
-def markdown_to_blocks(markdown):
+#BUG: When markdown involves more than 1 block, this does not divide the code block correctly
+def markdown_to_blocks(markdown, function_debug = None):
     #WARNING: Have to make an exception to code block for code block can have more than 1 new line between lines
-    first_line = markdown.split("\n", 1)[0]
-    first_word = first_line.split(" ", 1)[0]
-    if first_word == "```":
-        block = markdown
-        return [block]
-
     split_blocks = markdown.split("\n\n")
+    # first_line = markdown.split("\n", 1)[0]
+    # first_word = first_line.split(" ", 1)[0]
+    # if first_word == "```":
+    #     block = markdown
+    #     return [block]
+    code_block_indexes = []
+    for x in range(0, len(split_blocks)):
+        cur_block = split_blocks[x]
+        code_del_count = cur_block.count("```")
+        if code_del_count == 2:
+            continue
+        elif code_del_count == 1:
+            code_block_indexes.append(x)
+    
+    new_blocks = []
+    code_block = ""
+    for x in range(0, len(split_blocks)):
+        # If markdown has only 1 set of "```", that means no code block
+        if len(code_block_indexes) < 2:
+            new_blocks = split_blocks
+            break
+
+        begin_pointer = code_block_indexes[0]
+        end_pointer = code_block_indexes[1]
+
+        if begin_pointer <= x <= end_pointer:
+            if x == end_pointer:
+                code_block += split_blocks[x]
+                new_blocks.append(code_block)
+                code_block = ""
+            else:
+                code_block += f"{split_blocks[x]}\n\n"
+        else:
+            new_blocks.append(split_blocks[x])
+
+        if x > end_pointer and len(code_block_indexes) >= (end_pointer + 2):
+            begin_pointer += 2
+            end_pointer += 2
+
+
+        
+
     final_blocks = []
-    for block in split_blocks:
+    for block in new_blocks:
         stripped_block = block.strip()
         if stripped_block != "":
             final_blocks.append(stripped_block)
     
+    if function_debug != None:
+        print(f"final blocks: {final_blocks}")
     return final_blocks 
 
 def block_to_block_type(block, function_debug = None):
