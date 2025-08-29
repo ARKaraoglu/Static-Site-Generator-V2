@@ -1,6 +1,5 @@
-from textnode import TextType
-from textnode import TextNode
-
+from textnode import TextType, TextNode
+from file_logic import copy_static_to_public 
 
 class Main():
 
@@ -10,3 +9,5 @@ class Main():
     print(node.__eq__(node2))
     print(node.__repr__())
 
+
+    copy_static_to_public("/home/ahmet/bootdotdev/static-site-generator-v2/static", "/home/ahmet/bootdotdev/static-site-generator-v2/public")

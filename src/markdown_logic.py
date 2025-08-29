@@ -185,8 +185,6 @@ def text_to_textnode(text, function_debug = None):
         t_nodes = temp_node_list
     return t_nodes
 
-#NOTE: Initial Testing Done!
-#TEST: Function requires testing!
 def block_to_paragraph_element(block, function_debug = None):
     lines = block.split("\n")
     inline_textnodes = []
@@ -211,8 +209,6 @@ def block_to_paragraph_element(block, function_debug = None):
     paragraph_element = ParentNode("p", inline_leafnodes)
     return paragraph_element
 
-#NOTE: Initial Testing Done!
-#TEST: Function requires testing!
 def block_to_header_element(block, function_debug = None):
     block_first_split = block.split(" ", 1)
     new_block = block_first_split[1]
@@ -235,8 +231,6 @@ def block_to_header_element(block, function_debug = None):
     return header_element
 
 #NOTE: CODE has no inline markdown
-#NOTE: Initial Testing Done!
-#TEST: Function requires testing!
 def block_to_code_element(block):
     # block_first_split = block.split("\n", 1)
     # block_second_split = block_first_split[1].rsplit("\n", 1)
@@ -247,8 +241,6 @@ def block_to_code_element(block):
     code_element = ParentNode("pre", [child_leafnode])
     return code_element
 
-#NOTE: Initial Testing Done!
-#TEST: Function requires testing!
 def block_to_quote_element(block):
     old_lines = block.split("\n")
     new_lines = []
@@ -270,8 +262,6 @@ def block_to_quote_element(block):
     quote_element = ParentNode("blockquote", [paragraph_element])
     return quote_element
 
-#NOTE: Initial Testing Done!
-#TEST: Function requires testing!
 def block_to_unordered_list_element(block):
     lines = block.split("\n")
 
@@ -290,7 +280,6 @@ def block_to_unordered_list_element(block):
     unordered_list_element = ParentNode("ul", list_items)
     return unordered_list_element
 
-#TEST: Function requires testing!
 def block_to_ordered_list_element(block):
     lines = block.split("\n")
 
