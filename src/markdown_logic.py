@@ -316,7 +316,6 @@ def block_to_ordered_list_element(block):
 #NOTE: In BlockType.PARAGRAPH, we add extra <br> at the end of each line of a block to put all the lines into a single p html element . This process might be required to be done at a later stage. 
 def markdown_to_html(markdown, function_debug = None):
     
-    #BUG: markdown_to_blocks have a bug
     blocks = markdown_to_blocks(markdown)
     if function_debug != None:
         print(blocks)

@@ -8,7 +8,6 @@ class BlockType(Enum):
     UNORDERED_LIST = "unordered_list"
     ORDERED_LIST = "ordered_list"
 
-#BUG: When markdown involves more than 1 block, this does not divide the code block correctly
 def markdown_to_blocks(markdown, function_debug = None):
     #WARNING: Have to make an exception to code block for code block can have more than 1 new line between lines
     split_blocks = markdown.split("\n\n")
