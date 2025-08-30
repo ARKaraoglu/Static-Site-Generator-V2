@@ -26,3 +26,14 @@ def copy_static_to_public(src_dir_path, dest_dir_path, first_time = True):
         
         else:
             raise Exception(f"File System Object is neither a file or directory:{fso} in {src_dir_path}")
+
+
+def extract_title(markdown):
+    lines = markdown.split("\n")
+    title_text = ""
+    for line in lines:
+        if line.startswith("# "):
+            title_text = line.split("# ", 1)[1]
+            break
+    return title_text
+    
