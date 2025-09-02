@@ -48,27 +48,30 @@ def generate_page(from_path, template, dest_path):
 
     title_content = extract_title(markdown_contents)
     html_node = markdown_to_html(markdown_contents)
-    print(html_node)
-    print(f"\n{html_node.to_html()}")
+    # print(html_node)
+    # print(f"\n{html_node.to_html()}")
     html_string = html_node.to_html()
     
     t1 = template_contents.replace("{{ Title }}", title_content)
     final_template = t1.replace("{{ Content }}", html_string)
 
-    if os.path.exists(dest_path) == False:
-        file_path_tree = dest_path.split("/")
-        if len(file_path_tree) == 1:
-            pass
-        else:
-            current_path = ""
-            for x in range(0, len(file_path_tree)):
-                if x + 1 == len(file_path_tree):
-                    break
-                elif os.path.exists(file_path_tree[x]):
-                    current_path += f"{file_path_tree[x]}/"
-                elif os.path.exists(file_path_tree[x] == False):
-                    os.mkdir(f"{current_path}/{file_path_tree[x]}")
-                    current_path += f"{file_path_tree[x]}/"
+    directories = dest_path.rsplit("/", 1)[0]
+    os.makedirs(directories, exist_ok = True)
+
+    # if os.path.exists(dest_path) == False:
+    #     file_path_tree = dest_path.split("/")
+    #     print(file_path_tree)
+    #     if len(file_path_tree) == 1:
+    #         pass
+    #     else:
+    #         current_path = ""
+    #         for x in range(0, len(file_path_tree)):
+    #             current_path += f"/{file_path_tree[x]}"
+    #             print(f"-----{file_path_tree[x]}")
+    #             if x + 1 == len(file_path_tree):
+    #                 break
+    #             elif os.path.exists(current_path) == False:
+    #                 os.mkdir(current_path)
 
 
     shutil.copy(from_path, dest_path)
