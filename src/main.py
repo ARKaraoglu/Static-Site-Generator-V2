@@ -1,5 +1,5 @@
 from textnode import TextType, TextNode
-from file_logic import copy_static_to_public 
+from file_logic import copy_static_to_public , generate_page
 
 class Main():
 
@@ -10,4 +10,6 @@ class Main():
     print(node.__repr__())
 
 
-    copy_static_to_public("/home/ahmet/bootdotdev/static-site-generator-v2/static", "/home/ahmet/bootdotdev/static-site-generator-v2/public")
+    #copy_static_to_public("/home/ahmet/bootdotdev/static-site-generator-v2/static", "/home/ahmet/bootdotdev/static-site-generator-v2/public")
+    copy_static_to_public("static", "public")
+    generate_page("content/index.md", "template.html", "public/index.html")

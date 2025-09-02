@@ -1,6 +1,6 @@
 import os
 import shutil
-
+from markdown_logic import markdown_to_html
 
 def copy_static_to_public(src_dir_path, dest_dir_path, first_time = True):
     if os.path.exists(src_dir_path) == False:
@@ -36,4 +36,46 @@ def extract_title(markdown):
             title_text = line.split("# ", 1)[1]
             break
     return title_text
+
+
+def generate_page(from_path, template, dest_path):
+    print(f"Generating HTML Page from {from_path} to {dest_path} using this template {template}")
+    markdown_file = open(from_path)
+    markdown_contents = markdown_file.read()
     
+    template_file = open(template)
+    template_contents = template_file.read()
+
+    title_content = extract_title(markdown_contents)
+    html_node = markdown_to_html(markdown_contents)
+    print(html_node)
+    print(f"\n{html_node.to_html()}")
+    html_string = html_node.to_html()
+    
+    t1 = template_contents.replace("{{ Title }}", title_content)
+    final_template = t1.replace("{{ Content }}", html_string)
+
+    if os.path.exists(dest_path) == False:
+        file_path_tree = dest_path.split("/")
+        if len(file_path_tree) == 1:
+            pass
+        else:
+            current_path = ""
+            for x in range(0, len(file_path_tree)):
+                if x + 1 == len(file_path_tree):
+                    break
+                elif os.path.exists(file_path_tree[x]):
+                    current_path += f"{file_path_tree[x]}/"
+                elif os.path.exists(file_path_tree[x] == False):
+                    os.mkdir(f"{current_path}/{file_path_tree[x]}")
+                    current_path += f"{file_path_tree[x]}/"
+
+
+    shutil.copy(from_path, dest_path)
+    with open(dest_path, "w") as f:
+        f.write(final_template)
+
+
+
+
+

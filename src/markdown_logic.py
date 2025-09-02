@@ -261,6 +261,9 @@ def block_to_quote_element(block):
 
     quote_element = ParentNode("blockquote", [paragraph_element])
     return quote_element
+    # e1 = LeafNode(None, new_block)
+    # quote_element = ParentNode("blockquote", [e1])
+    # return quote_element
 
 def block_to_unordered_list_element(block):
     lines = block.split("\n")
