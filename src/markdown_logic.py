@@ -257,13 +257,13 @@ def block_to_quote_element(block):
     for line in new_lines:
         new_block += line
 
-    # paragraph_element = block_to_paragraph_element(new_block)
-    #
-    # quote_element = ParentNode("blockquote", [paragraph_element])
-    # return quote_element
-    e1 = LeafNode(None, new_block)
-    quote_element = ParentNode("blockquote", [e1])
+    paragraph_element = block_to_paragraph_element(new_block)
+
+    quote_element = ParentNode("blockquote", [paragraph_element])
     return quote_element
+    # e1 = LeafNode(None, new_block)
+    # quote_element = ParentNode("blockquote", [e1])
+    # return quote_element
 
 def block_to_unordered_list_element(block):
     lines = block.split("\n")
