@@ -1,4 +1,5 @@
 import os
+from os.path import isfile
 import shutil
 from markdown_logic import markdown_to_html
 
@@ -67,34 +68,75 @@ def generate_page(from_path, template, dest_path):
 
 
 def generate_pages_recursively(content_dir_path, template_path, dest_dir_path, basepath):
+    # Makes sure the destination exists and make it if it is not
+    os.makedirs(dest_dir_path, exist_ok=True)
     
+    content_dir_fso = os.listdir(content_dir_path)
+    print(content_dir_fso)
+    for fso in content_dir_fso:
+        source_path = f"{content_dir_path}/{fso}"
+        if os.path.isfile(source_path):
+            print(f"File path: {source_path}")
+            fso_html = ""
+            if fso.endswith(".md"):
+                fso_html = fso.replace(".md", ".html")
+            else:
+                shutil.copy(source_path,f"{dest_dir_path}/{fso}")
+                continue
 
-    content_dir_fsos = os.listdir(content_dir_path)
-    print(content_dir_fsos)
-    for fso in content_dir_fsos:
-        if os.path.isfile(f"{content_dir_path}/{fso}"):
-            fso_html = fso.replace(".md", ".html")
-            shutil.copy(f"{content_dir_path}/{fso}", f"{dest_dir_path}/{fso_html}")
             
-            template_file = open(template_path)
-            template_content = template_file.read()
-            md_file = open(f"{content_dir_path}/{fso}")
+            temp_file = open(template_path)
+            temp_content = temp_file.read()
+
+            md_file = open(source_path)
             md_content = md_file.read()
-
-            md_title = extract_title(md_content)
-            md_html_node = markdown_to_html(md_content)
-
-            template_content = template_content.replace("{{ Title }}", md_title)
-            template_content = template_content.replace("{{ Content }}", md_html_node.to_html())
-            template_content = template_content.replace('href="/', basepath)
-            template_content = template_content.replace('src="/', basepath)
-
-            with open(f"{dest_dir_path}/{fso_html}", "w") as file:
-                file.write(template_content)
+            html_node = markdown_to_html(md_content)
+            html_string = html_node.to_html()
             
-        elif os.path.isdir(f"{content_dir_path}/{fso}"):
-            os.mkdir(f"{dest_dir_path}/{fso}")
+            temp_content = temp_content.replace("{{ Title }}", extract_title(md_content))
+            temp_content = temp_content.replace("{{ Content }}", html_string)
+            temp_content = temp_content.replace('href="/', f'href="{basepath}')
+            temp_content = temp_content.replace('src="/', f'src="{basepath}')
+
+            out_path = f"{dest_dir_path}/{fso_html}"
+            with open(out_path, "w") as html_file:
+                html_file.write(temp_content)
+
+        if os.path.isdir(f"{content_dir_path}/{fso}"):
+            print(f"Directory path: {content_dir_path}/{fso}")
+            os.makedirs(f"{dest_dir_path}/{fso}", exist_ok=True)
             generate_pages_recursively(f"{content_dir_path}/{fso}", template_path, f"{dest_dir_path}/{fso}", basepath)
+
+
+
+
+
+    # content_dir_fsos = os.listdir(content_dir_path)
+    # print(content_dir_fsos)
+    # for fso in content_dir_fsos:
+    #     if os.path.isfile(f"{content_dir_path}/{fso}"):
+    #         fso_html = fso.replace(".md", ".html")
+    #         shutil.copy(f"{content_dir_path}/{fso}", f"{dest_dir_path}/{fso_html}")
+    #         
+    #         template_file = open(template_path)
+    #         template_content = template_file.read()
+    #         md_file = open(f"{content_dir_path}/{fso}")
+    #         md_content = md_file.read()
+    #
+    #         md_title = extract_title(md_content)
+    #         md_html_node = markdown_to_html(md_content)
+    #
+    #         template_content = template_content.replace("{{ Title }}", md_title)
+    #         template_content = template_content.replace("{{ Content }}", md_html_node.to_html())
+    #         template_content = template_content.replace('href="/', f'href="{basepath}')
+    #         template_content = template_content.replace('src="/', f'src="{basepath}')
+    #
+    #         with open(f"{dest_dir_path}/{fso_html}", "w") as file:
+    #             file.write(template_content)
+    #         
+    #     elif os.path.isdir(f"{content_dir_path}/{fso}"):
+    #         os.mkdir(f"{dest_dir_path}/{fso}")
+    #         generate_pages_recursively(f"{content_dir_path}/{fso}", template_path, f"{dest_dir_path}/{fso}", basepath)
 
 
 
