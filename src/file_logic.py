@@ -58,26 +58,40 @@ def generate_page(from_path, template, dest_path):
     directories = dest_path.rsplit("/", 1)[0]
     os.makedirs(directories, exist_ok = True)
 
-    # if os.path.exists(dest_path) == False:
-    #     file_path_tree = dest_path.split("/")
-    #     print(file_path_tree)
-    #     if len(file_path_tree) == 1:
-    #         pass
-    #     else:
-    #         current_path = ""
-    #         for x in range(0, len(file_path_tree)):
-    #             current_path += f"/{file_path_tree[x]}"
-    #             print(f"-----{file_path_tree[x]}")
-    #             if x + 1 == len(file_path_tree):
-    #                 break
-    #             elif os.path.exists(current_path) == False:
-    #                 os.mkdir(current_path)
 
 
     shutil.copy(from_path, dest_path)
     with open(dest_path, "w") as f:
         f.write(final_template)
 
+
+def generate_pages_recursively(content_dir_path, template_path, dest_dir_path):
+    
+
+    content_dir_fsos = os.listdir(content_dir_path)
+    print(content_dir_fsos)
+    for fso in content_dir_fsos:
+        if os.path.isfile(f"{content_dir_path}/{fso}"):
+            fso_html = fso.replace(".md", ".html")
+            shutil.copy(f"{content_dir_path}/{fso}", f"{dest_dir_path}/{fso_html}")
+            
+            template_file = open(template_path)
+            template_content = template_file.read()
+            md_file = open(f"{content_dir_path}/{fso}")
+            md_content = md_file.read()
+
+            md_title = extract_title(md_content)
+            md_html_node = markdown_to_html(md_content)
+
+            template_content = template_content.replace("{{ Title }}", md_title)
+            template_content = template_content.replace("{{ Content }}", md_html_node.to_html())
+            
+            with open(f"{dest_dir_path}/{fso_html}", "w") as file:
+                file.write(template_content)
+            
+        elif os.path.isdir(f"{content_dir_path}/{fso}"):
+            os.mkdir(f"{dest_dir_path}/{fso}")
+            generate_pages_recursively(f"{content_dir_path}/{fso}", template_path, f"{dest_dir_path}/{fso}")
 
 
 
