@@ -4,7 +4,51 @@ from block_logic import BlockType, markdown_to_blocks, block_to_block_type
 import re
 
 
-# old_nodes = List of TextNodes
+# Description: Seperates old text nodes into tokens representing inline markdowns including regular text excluding Images and Links
+# Parameters:
+# old_nodes -> List of textnodes
+# Return:
+# tokenized_nodes -> 2D list containing list of tokens per textnode
+def tokenizer(old_nodes):
+    tokenized_nodes = []
+    for node in old_nodes:
+        current_node_tokens = []
+        current_text = ""
+        for chr in node.text:
+            match(chr):
+                case "*":
+                    if current_text != "":
+                        current_node_tokens.append(f"text({current_text})")
+                        current_text = ""
+                    current_node_tokens.append("star")
+                case "_":
+                    if current_text != "":
+                        current_node_tokens.append(f"text({current_text})")
+                        current_text = ""
+                    current_node_tokens.append("underscore")
+                case "`":
+                    if current_text != "":
+                        current_node_tokens.append(f"text({current_text})")
+                        current_text = ""
+                    current_node_tokens.append("code")
+                case _:
+                    current_text += chr
+
+        if current_text != "":
+            current_node_tokens.append(f"text({current_text})")
+            
+        tokenized_nodes.append(current_node_tokens)
+    return tokenized_nodes
+
+
+# Description: Divides a list of text nodes into new text nodes using the entered delimiter and textype
+# Parameters:
+# old_nodes -> list of textnodes
+# delimiter -> string character used as delimiter
+# text_type -> TextType enum
+# Return:
+# new_nodes -> list of textnodes
+
 def split_nodes_delimiter(old_nodes, delimiter, text_type):
     new_nodes = []
     for node in old_nodes:

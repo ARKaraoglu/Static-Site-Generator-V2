@@ -1,7 +1,80 @@
 import unittest
 from textnode import TextNode, TextType
 from htmlnode import ParentNode, LeafNode
-from markdown_logic import split_nodes_delimiter, extract_markdown_images, extract_markdown_links, split_nodes_image, split_nodes_link, text_to_textnode, markdown_to_html
+from markdown_logic import tokenizer, split_nodes_delimiter, extract_markdown_images, extract_markdown_links, split_nodes_image, split_nodes_link, text_to_textnode, markdown_to_html
+
+class TestTokenizer(unittest.TestCase):
+    def test_tokenizer_text(self):
+        textnode = TextNode("This is a paragraph textnode", TextType.TEXT)
+        tokens = tokenizer([textnode])
+        self.assertEqual(tokens, [["text(This is a paragraph textnode)"]])
+
+    def test_tokenizer_bold(self):
+        textnode = TextNode("This is a textnode with **bold** text in it", TextType.TEXT)
+        tokens = tokenizer([textnode])
+        self.assertEqual(tokens, [["text(This is a textnode with )", "star", "star", "text(bold)", "star", "star", "text( text in it)"]])
+    
+    def test_tokenizer_multi_bold(self):
+        textnode = TextNode("This is a **textnode** with **bold** text in it", TextType.TEXT)
+        tokens = tokenizer([textnode])
+        self.assertEqual(tokens, [["text(This is a )", "star", "star", "text(textnode)", "star", "star", "text( with )", "star", "star", "text(bold)", "star", "star", "text( text in it)"]])
+    
+    def test_tokenizer_italic(self):
+        textnode = TextNode("This is a textnode with *bold* text in it", TextType.TEXT)
+        tokens = tokenizer([textnode])
+        self.assertEqual(tokens, [["text(This is a textnode with )", "star", "text(bold)", "star", "text( text in it)"]])
+    
+    def test_tokenizer_multi_italic(self):
+        textnode = TextNode("This is a *textnode* with *bold* text in it", TextType.TEXT)
+        tokens = tokenizer([textnode])
+        self.assertEqual(tokens, [["text(This is a )", "star", "text(textnode)", "star", "text( with )", "star", "text(bold)", "star", "text( text in it)"]])
+   
+    def test_tokenizer_bold_underscore(self):
+        textnode = TextNode("This sentence has __bold text__ made with underscores", TextType.TEXT)
+        tokens = tokenizer([textnode])
+        self.assertEqual(tokens, [["text(This sentence has )", "underscore", "underscore", "text(bold text)", "underscore", "underscore", "text( made with underscores)"]])
+
+    def test_tokenizer_italic_underscore(self):
+        textnode = TextNode("This sentence has _bold text_ made with underscores", TextType.TEXT)
+        tokens = tokenizer([textnode])
+        self.assertEqual(tokens, [["text(This sentence has )", "underscore", "text(bold text)", "underscore", "text( made with underscores)"]])
+
+    def test_tokenizer_code(self):
+        textnode = TextNode("This is a node with `code` inline markdown in it", TextType.TEXT)
+        tokens = tokenizer([textnode])
+        self.assertEqual(tokens, [["text(This is a node with )", "code", "text(code)", "code", "text( inline markdown in it)"]])
+
+    def test_tokenizer_multi_code(self):
+        textnode = TextNode("This is a `textnode` with `code` inline markdown in it", TextType.TEXT)
+        tokens = tokenizer([textnode])
+        self.assertEqual(tokens, [["text(This is a )", "code", "text(textnode)", "code", "text( with )", "code", "text(code)", "code", "text( inline markdown in it)"]])
+    
+    def test_tokenizer_multi_type(self):
+        textnode = TextNode("This is **bold**, this is _italic_, and this is `inline code`.", TextType.TEXT)
+        tokens = tokenizer([textnode])
+        self.assertEqual(tokens, [["text(This is )", "star", "star", "text(bold)", "star", "star", "text(, this is )", "underscore", "text(italic)", "underscore", "text(, and this is )", "code", "text(inline code)", "code", "text(.)"]])
+
+    def test_tokenizer_multi_nodes(self):
+        textnode1 = TextNode("This is a **textnode** with **bold** text in it", TextType.TEXT)
+        textnode2 = TextNode("This is a *textnode* with *bold* text in it", TextType.TEXT)
+        textnode3 = TextNode("This sentence has __bold text__ made with underscores", TextType.TEXT)
+        textnode4 = TextNode("This is a node with `code` inline markdown in it", TextType.TEXT)
+        textnode5 = TextNode("This is a `textnode` with `code` inline markdown in it", TextType.TEXT)
+        textnode6 = TextNode("This is **bold**, this is _italic_, and this is `inline code`.", TextType.TEXT)
+        textnode7 = TextNode("This is a paragraph textnode", TextType.TEXT)
+
+        tokens = tokenizer([textnode1, textnode2, textnode3, textnode4, textnode5, textnode6, textnode7])
+        self.assertEqual(tokens, [
+            ["text(This is a )", "star", "star", "text(textnode)", "star", "star", "text( with )", "star", "star", "text(bold)", "star", "star", "text( text in it)"],
+            ["text(This is a )", "star", "text(textnode)", "star", "text( with )", "star", "text(bold)", "star", "text( text in it)"],
+            ["text(This sentence has )", "underscore", "underscore", "text(bold text)", "underscore", "underscore", "text( made with underscores)"],
+            ["text(This is a node with )", "code", "text(code)", "code", "text( inline markdown in it)"],
+            ["text(This is a )", "code", "text(textnode)", "code", "text( with )", "code", "text(code)", "code", "text( inline markdown in it)"],
+            ["text(This is )", "star", "star", "text(bold)", "star", "star", "text(, this is )", "underscore", "text(italic)", "underscore", "text(, and this is )", "code", "text(inline code)", "code", "text(.)"],
+            ["text(This is a paragraph textnode)"]
+        ])
+
+
 
 class TestSplitDelimiter(unittest.TestCase):
     def test_split_nodes_delimiter_1_child(self):
