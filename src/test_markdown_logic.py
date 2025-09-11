@@ -7,71 +7,204 @@ class TestTokenizer(unittest.TestCase):
     def test_tokenizer_text(self):
         textnode = TextNode("This is a paragraph textnode", TextType.TEXT)
         tokens = tokenizer([textnode])
-        self.assertEqual(tokens, [["text(This is a paragraph textnode)"]])
+        self.assertEqual(tokens, [[("TEXT", "This is a paragraph textnode")]])
 
     def test_tokenizer_bold(self):
         textnode = TextNode("This is a textnode with **bold** text in it", TextType.TEXT)
         tokens = tokenizer([textnode])
-        self.assertEqual(tokens, [["text(This is a textnode with )", "star", "star", "text(bold)", "star", "star", "text( text in it)"]])
+        self.assertEqual(tokens, [[("TEXT", "This is a textnode with "), ("STAR", 2), ("TEXT", "bold"), ("STAR", 2), ("TEXT", " text in it")]])
+    
+    def test_tokenizer_bold2(self):
+        textnode = TextNode("This is a textnode with bold text in **it**", TextType.TEXT)
+        tokens = tokenizer([textnode])
+        self.assertEqual(tokens, [[("TEXT", "This is a textnode with bold text in "), ("STAR", 2), ("TEXT", "it"), ("STAR", 2)]])
     
     def test_tokenizer_multi_bold(self):
         textnode = TextNode("This is a **textnode** with **bold** text in it", TextType.TEXT)
         tokens = tokenizer([textnode])
-        self.assertEqual(tokens, [["text(This is a )", "star", "star", "text(textnode)", "star", "star", "text( with )", "star", "star", "text(bold)", "star", "star", "text( text in it)"]])
+        self.assertEqual(tokens, [[("TEXT", "This is a "), ("STAR", 2), ("TEXT", "textnode"), ("STAR", 2), ("TEXT", " with "), ("STAR", 2), ("TEXT", "bold"), ("STAR", 2), ("TEXT", " text in it")]])
     
     def test_tokenizer_italic(self):
         textnode = TextNode("This is a textnode with *bold* text in it", TextType.TEXT)
         tokens = tokenizer([textnode])
-        self.assertEqual(tokens, [["text(This is a textnode with )", "star", "text(bold)", "star", "text( text in it)"]])
+        self.assertEqual(tokens, [[("TEXT", "This is a textnode with "), ("STAR", 1), ("TEXT", "bold"), ("STAR", 1), ("TEXT", " text in it")]])
     
     def test_tokenizer_multi_italic(self):
-        textnode = TextNode("This is a *textnode* with *bold* text in it", TextType.TEXT)
+        textnode = TextNode("*This* is a *textnode* with *bold* text in it", TextType.TEXT)
         tokens = tokenizer([textnode])
-        self.assertEqual(tokens, [["text(This is a )", "star", "text(textnode)", "star", "text( with )", "star", "text(bold)", "star", "text( text in it)"]])
-   
+        self.assertEqual(tokens, [[
+            ("STAR", 1), 
+            ("TEXT", "This"), 
+            ("STAR", 1), 
+            ("TEXT", " is a "), 
+            ("STAR", 1), 
+            ("TEXT", "textnode"), 
+            ("STAR", 1), 
+            ("TEXT", " with "), 
+            ("STAR", 1), 
+            ("TEXT", "bold"), 
+            ("STAR", 1), 
+            ("TEXT", " text in it")]])
+
     def test_tokenizer_bold_underscore(self):
-        textnode = TextNode("This sentence has __bold text__ made with underscores", TextType.TEXT)
+        textnode = TextNode("__This__ sentence has __bold text__ made with __underscores__", TextType.TEXT)
         tokens = tokenizer([textnode])
-        self.assertEqual(tokens, [["text(This sentence has )", "underscore", "underscore", "text(bold text)", "underscore", "underscore", "text( made with underscores)"]])
+        self.assertEqual(tokens, [[
+            ("UNDERSCORE", 2),
+            ("TEXT", "This"),
+            ("UNDERSCORE", 2),
+            ("TEXT", " sentence has "),
+            ("UNDERSCORE", 2),
+            ("TEXT", "bold text"),
+            ("UNDERSCORE", 2),
+            ("TEXT", " made with "),
+            ("UNDERSCORE", 2),
+            ("TEXT", "underscores"),
+            ("UNDERSCORE", 2)
+        ]])
 
     def test_tokenizer_italic_underscore(self):
         textnode = TextNode("This sentence has _bold text_ made with underscores", TextType.TEXT)
         tokens = tokenizer([textnode])
-        self.assertEqual(tokens, [["text(This sentence has )", "underscore", "text(bold text)", "underscore", "text( made with underscores)"]])
+        self.assertEqual(tokens, [[
+            ("TEXT", "This sentence has "),
+            ("UNDERSCORE", 1),
+            ("TEXT", "bold text"),
+            ("UNDERSCORE", 1),
+            ("TEXT", " made with underscores")
+        ]])
 
     def test_tokenizer_code(self):
         textnode = TextNode("This is a node with `code` inline markdown in it", TextType.TEXT)
         tokens = tokenizer([textnode])
-        self.assertEqual(tokens, [["text(This is a node with )", "code", "text(code)", "code", "text( inline markdown in it)"]])
+        self.assertEqual(tokens, [[
+            ("TEXT", "This is a node with "),
+            ("CODE", 1),
+            ("TEXT", "code"),
+            ("CODE", 1),
+            ("TEXT", " inline markdown in it")
+        ]])
 
     def test_tokenizer_multi_code(self):
-        textnode = TextNode("This is a `textnode` with `code` inline markdown in it", TextType.TEXT)
+        textnode = TextNode("This is a `textnode` with `code` inline markdown in `it`", TextType.TEXT)
         tokens = tokenizer([textnode])
-        self.assertEqual(tokens, [["text(This is a )", "code", "text(textnode)", "code", "text( with )", "code", "text(code)", "code", "text( inline markdown in it)"]])
+        self.assertEqual(tokens, [[
+            ("TEXT", "This is a "),
+            ("CODE", 1),
+            ("TEXT", "textnode"),
+            ("CODE", 1),
+            ("TEXT", " with "),
+            ("CODE", 1),
+            ("TEXT", "code"),
+            ("CODE", 1),
+            ("TEXT", " inline markdown in "),
+            ("CODE", 1),
+            ("TEXT", "it"),
+            ("CODE", 1)
+        ]])
     
     def test_tokenizer_multi_type(self):
         textnode = TextNode("This is **bold**, this is _italic_, and this is `inline code`.", TextType.TEXT)
         tokens = tokenizer([textnode])
-        self.assertEqual(tokens, [["text(This is )", "star", "star", "text(bold)", "star", "star", "text(, this is )", "underscore", "text(italic)", "underscore", "text(, and this is )", "code", "text(inline code)", "code", "text(.)"]])
+        self.assertEqual(tokens, [[
+            ("TEXT", "This is "),
+            ("STAR", 2),
+            ("TEXT", "bold"),
+            ("STAR", 2),
+            ("TEXT", ", this is "),
+            ("UNDERSCORE", 1),
+            ("TEXT", "italic"),
+            ("UNDERSCORE", 1),
+            ("TEXT", ", and this is "),
+            ("CODE", 1),
+            ("TEXT", "inline code"),
+            ("CODE", 1),
+            ("TEXT", ".")
+        ]])
 
     def test_tokenizer_multi_nodes(self):
+        self.maxDiff = None
         textnode1 = TextNode("This is a **textnode** with **bold** text in it", TextType.TEXT)
-        textnode2 = TextNode("This is a *textnode* with *bold* text in it", TextType.TEXT)
+        textnode2 = TextNode("*This* is a *textnode* with *bold* text in it", TextType.TEXT)
         textnode3 = TextNode("This sentence has __bold text__ made with underscores", TextType.TEXT)
-        textnode4 = TextNode("This is a node with `code` inline markdown in it", TextType.TEXT)
+        textnode4 = TextNode("This is a node with `code` inline markdown in `it`", TextType.TEXT)
         textnode5 = TextNode("This is a `textnode` with `code` inline markdown in it", TextType.TEXT)
         textnode6 = TextNode("This is **bold**, this is _italic_, and this is `inline code`.", TextType.TEXT)
         textnode7 = TextNode("This is a paragraph textnode", TextType.TEXT)
 
         tokens = tokenizer([textnode1, textnode2, textnode3, textnode4, textnode5, textnode6, textnode7])
         self.assertEqual(tokens, [
-            ["text(This is a )", "star", "star", "text(textnode)", "star", "star", "text( with )", "star", "star", "text(bold)", "star", "star", "text( text in it)"],
-            ["text(This is a )", "star", "text(textnode)", "star", "text( with )", "star", "text(bold)", "star", "text( text in it)"],
-            ["text(This sentence has )", "underscore", "underscore", "text(bold text)", "underscore", "underscore", "text( made with underscores)"],
-            ["text(This is a node with )", "code", "text(code)", "code", "text( inline markdown in it)"],
-            ["text(This is a )", "code", "text(textnode)", "code", "text( with )", "code", "text(code)", "code", "text( inline markdown in it)"],
-            ["text(This is )", "star", "star", "text(bold)", "star", "star", "text(, this is )", "underscore", "text(italic)", "underscore", "text(, and this is )", "code", "text(inline code)", "code", "text(.)"],
-            ["text(This is a paragraph textnode)"]
+            [
+                ("TEXT", "This is a "), 
+                ("STAR", 2), 
+                ("TEXT", "textnode"), 
+                ("STAR", 2), 
+                ("TEXT", " with "), 
+                ("STAR", 2), 
+                ("TEXT", "bold"), 
+                ("STAR", 2), 
+                ("TEXT", " text in it")
+            ],
+            [
+                ("STAR", 1), 
+                ("TEXT", "This"), 
+                ("STAR", 1), 
+                ("TEXT", " is a "), 
+                ("STAR", 1), 
+                ("TEXT", "textnode"), 
+                ("STAR", 1), 
+                ("TEXT", " with "), 
+                ("STAR", 1), 
+                ("TEXT", "bold"), 
+                ("STAR", 1), 
+                ("TEXT", " text in it")
+            ],
+            [
+                ("TEXT", "This sentence has "),
+                ("UNDERSCORE", 2),
+                ("TEXT", "bold text"),
+                ("UNDERSCORE", 2),
+                ("TEXT", " made with underscores")
+            ],
+            [
+                ("TEXT", "This is a node with "),
+                ("CODE", 1),
+                ("TEXT", "code"),
+                ("CODE", 1),
+                ("TEXT", " inline markdown in "),
+                ("CODE", 1),
+                ("TEXT", "it"),
+                ("CODE", 1)
+            ],
+            [
+                ("TEXT", "This is a "),
+                ("CODE", 1),
+                ("TEXT", "textnode"),
+                ("CODE", 1),
+                ("TEXT", " with "),
+                ("CODE", 1),
+                ("TEXT", "code"),
+                ("CODE", 1),
+                ("TEXT", " inline markdown in it")
+            ],
+            [
+                ("TEXT", "This is "),
+                ("STAR", 2),
+                ("TEXT", "bold"),
+                ("STAR", 2),
+                ("TEXT", ", this is "),
+                ("UNDERSCORE", 1),
+                ("TEXT", "italic"),
+                ("UNDERSCORE", 1),
+                ("TEXT", ", and this is "),
+                ("CODE", 1),
+                ("TEXT", "inline code"),
+                ("CODE", 1),
+                ("TEXT", ".")
+            ],
+            [
+                ("TEXT", "This is a paragraph textnode")
+            ]
         ])
 
 

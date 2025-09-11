@@ -9,37 +9,67 @@ import re
 # old_nodes -> List of textnodes
 # Return:
 # tokenized_nodes -> 2D list containing list of tokens per textnode
+
+#TODO: Update description above
+#TODO: Add test cases that have inline markdown inside an inline markdown. E.G. ***bold and italic*** etc.
 def tokenizer(old_nodes):
     tokenized_nodes = []
     for node in old_nodes:
-        current_node_tokens = []
+        node_tuples_list = []
         current_text = ""
-        for chr in node.text:
-            match(chr):
+        # Converts indexes into tuple(type, val)
+        for index in node.text:
+            match(index):
                 case "*":
-                    if current_text != "":
-                        current_node_tokens.append(f"text({current_text})")
+                    if len(current_text) == 0:
+                        node_tuples_list.append(("STAR", 1))
+                    else:
+                        node_tuples_list.append(("TEXT", current_text))
                         current_text = ""
-                    current_node_tokens.append("star")
-                case "_":
-                    if current_text != "":
-                        current_node_tokens.append(f"text({current_text})")
-                        current_text = ""
-                    current_node_tokens.append("underscore")
-                case "`":
-                    if current_text != "":
-                        current_node_tokens.append(f"text({current_text})")
-                        current_text = ""
-                    current_node_tokens.append("code")
-                case _:
-                    current_text += chr
+                        node_tuples_list.append(("STAR", 1))
 
-        if current_text != "":
-            current_node_tokens.append(f"text({current_text})")
+                case "_":
+                    if len(current_text) == 0:
+                        node_tuples_list.append(("UNDERSCORE", 1))
+                    else:
+                        node_tuples_list.append(("TEXT", current_text))
+                        current_text = ""
+                        node_tuples_list.append(("UNDERSCORE", 1))
+                case "`":
+                    if len(current_text) == 0:
+                        node_tuples_list.append(("CODE", 1))
+                    else:
+                        node_tuples_list.append(("TEXT", current_text))
+                        current_text = ""
+                        node_tuples_list.append(("CODE", 1))
+                case _:
+                    current_text += index
+
+        if len(current_text) != 0:
+            node_tuples_list.append(("TEXT", current_text))
+       
             
-        tokenized_nodes.append(current_node_tokens)
+        ptr1 = 0
+        ptr2 = 1
+        filtered_tuples_list = []
+        # Merges tuples which have the same type by adding their values together
+        while(ptr2 < len(node_tuples_list)):
+       
+            if node_tuples_list[ptr1][0] == node_tuples_list[ptr2][0]:
+                node_tuples_list[ptr2] = (node_tuples_list[ptr2][0], node_tuples_list[ptr2][1] + node_tuples_list[ptr1][1])
+            else:
+                filtered_tuples_list.append(node_tuples_list[ptr1])
+            ptr1 += 1
+            ptr2 += 1
+                
+        filtered_tuples_list.append(node_tuples_list[ptr2 - 1])
+        if len(node_tuples_list) == 1:
+            filtered_tuples_list = node_tuples_list
+
+        tokenized_nodes.append(filtered_tuples_list)
     return tokenized_nodes
 
+        
 
 # Description: Divides a list of text nodes into new text nodes using the entered delimiter and textype
 # Parameters:
