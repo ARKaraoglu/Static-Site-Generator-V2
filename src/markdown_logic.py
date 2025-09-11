@@ -4,7 +4,78 @@ from block_logic import BlockType, markdown_to_blocks, block_to_block_type
 import re
 
 
-# old_nodes = List of TextNodes
+# Description: Seperates old text nodes into tuple tokens representing inline markdowns including regular text excluding Images and Links
+# Parameters:
+# old_nodes -> List of textnodes
+# Return:
+# tokenized_nodes -> 2D list containing list of tuples (type, val) per node
+def tokenizer(old_nodes):
+    tokenized_nodes = []
+    for node in old_nodes:
+        node_tuples_list = []
+        current_text = ""
+        # Converts indexes into tuple(type, val)
+        for index in node.text:
+            match(index):
+                case "*":
+                    if len(current_text) == 0:
+                        node_tuples_list.append(("STAR", 1))
+                    else:
+                        node_tuples_list.append(("TEXT", current_text))
+                        current_text = ""
+                        node_tuples_list.append(("STAR", 1))
+
+                case "_":
+                    if len(current_text) == 0:
+                        node_tuples_list.append(("UNDERSCORE", 1))
+                    else:
+                        node_tuples_list.append(("TEXT", current_text))
+                        current_text = ""
+                        node_tuples_list.append(("UNDERSCORE", 1))
+                case "`":
+                    if len(current_text) == 0:
+                        node_tuples_list.append(("CODE", 1))
+                    else:
+                        node_tuples_list.append(("TEXT", current_text))
+                        current_text = ""
+                        node_tuples_list.append(("CODE", 1))
+                case _:
+                    current_text += index
+
+        if len(current_text) != 0:
+            node_tuples_list.append(("TEXT", current_text))
+       
+            
+        ptr1 = 0
+        ptr2 = 1
+        filtered_tuples_list = []
+        # Merges tuples which have the same type by adding their values together
+        while(ptr2 < len(node_tuples_list)):
+       
+            if node_tuples_list[ptr1][0] == node_tuples_list[ptr2][0]:
+                node_tuples_list[ptr2] = (node_tuples_list[ptr2][0], node_tuples_list[ptr2][1] + node_tuples_list[ptr1][1])
+            else:
+                filtered_tuples_list.append(node_tuples_list[ptr1])
+            ptr1 += 1
+            ptr2 += 1
+                
+        filtered_tuples_list.append(node_tuples_list[ptr2 - 1])
+        if len(node_tuples_list) == 1:
+            filtered_tuples_list = node_tuples_list
+
+        tokenized_nodes.append(filtered_tuples_list)
+    return tokenized_nodes
+
+        
+
+# Description: Divides a list of text nodes into new text nodes using the entered delimiter and textype
+# Parameters:
+# old_nodes -> list of textnodes
+# delimiter -> string character used as delimiter
+# text_type -> TextType enum
+# Return:
+# new_nodes -> list of textnodes
+
 def split_nodes_delimiter(old_nodes, delimiter, text_type):
     new_nodes = []
     for node in old_nodes:
