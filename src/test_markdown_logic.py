@@ -123,7 +123,6 @@ class TestTokenizer(unittest.TestCase):
         ]])
 
     def test_tokenizer_multi_nodes(self):
-        self.maxDiff = None
         textnode1 = TextNode("This is a **textnode** with **bold** text in it", TextType.TEXT)
         textnode2 = TextNode("*This* is a *textnode* with *bold* text in it", TextType.TEXT)
         textnode3 = TextNode("This sentence has __bold text__ made with underscores", TextType.TEXT)
@@ -206,6 +205,11 @@ class TestTokenizer(unittest.TestCase):
                 ("TEXT", "This is a paragraph textnode")
             ]
         ])
+
+    def test_tokenizer_nested_inline_markdown1(self):
+        textnode = TextNode("This is **bold and *nested italic*** with `inline code` and **_bold-italic_** text", TextType.TEXT)
+        tokens = tokenizer([textnode])
+        self.assertEqual(tokens, [[("TEXT", "This is "),("STAR", 2),("TEXT", "bold and "),("STAR", 1),("TEXT", "nested italic"),("STAR", 3),("TEXT", " with "),("CODE", 1),("TEXT", "inline code"),("CODE", 1),("TEXT", " and "),("STAR", 2),("UNDERSCORE", 1),("TEXT", "bold-italic"),("UNDERSCORE", 1),("STAR", 2),("TEXT", " text")]])
 
 
 

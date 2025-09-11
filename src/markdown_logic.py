@@ -4,14 +4,11 @@ from block_logic import BlockType, markdown_to_blocks, block_to_block_type
 import re
 
 
-# Description: Seperates old text nodes into tokens representing inline markdowns including regular text excluding Images and Links
+# Description: Seperates old text nodes into tuple tokens representing inline markdowns including regular text excluding Images and Links
 # Parameters:
 # old_nodes -> List of textnodes
 # Return:
-# tokenized_nodes -> 2D list containing list of tokens per textnode
-
-#TODO: Update description above
-#TODO: Add test cases that have inline markdown inside an inline markdown. E.G. ***bold and italic*** etc.
+# tokenized_nodes -> 2D list containing list of tuples (type, val) per node
 def tokenizer(old_nodes):
     tokenized_nodes = []
     for node in old_nodes:
