@@ -211,7 +211,30 @@ class TestTokenizer(unittest.TestCase):
         tokens = tokenizer([textnode])
         self.assertEqual(tokens, [[("TEXT", "This is "),("STAR", 2),("TEXT", "bold and "),("STAR", 1),("TEXT", "nested italic"),("STAR", 3),("TEXT", " with "),("CODE", 1),("TEXT", "inline code"),("CODE", 1),("TEXT", " and "),("STAR", 2),("UNDERSCORE", 1),("TEXT", "bold-italic"),("UNDERSCORE", 1),("STAR", 2),("TEXT", " text")]])
 
+    def test_tokenizer_image(self):
+        textnode = TextNode("This is a node with ![image alt](image source) in it!", TextType.TEXT)
+        tokens = tokenizer([textnode])
+        self.assertEqual(tokens, [("TEXT", "This is a node with "), ("EX_MARK", "!"), ("OP_BR", 1), ("TEXT", "image alt"), ("CL_BR", 1), ("OP_PA", 1), ("TEXT", "image source"), (), (), ()])
+    def test_tokenizer_image2(self):
+        pass
 
+    def test_tokenizer_image3(self):
+        pass
+
+    def test_tokenizer_image4(self):
+        pass
+
+    def test_tokenizer_link(self):
+        pass
+
+    def test_tokenizer_link2(self):
+        pass
+
+    def test_tokenizer_link3(self):
+        pass
+
+    def test_tokenizer_link4(self):
+        pass
 
 class TestSplitDelimiter(unittest.TestCase):
     def test_split_nodes_delimiter_1_child(self):

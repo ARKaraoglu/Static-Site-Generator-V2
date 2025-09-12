@@ -4,11 +4,14 @@ from block_logic import BlockType, markdown_to_blocks, block_to_block_type
 import re
 
 
-# Description: Seperates old text nodes into tuple tokens representing inline markdowns including regular text excluding Images and Links
+# Description: Seperates old text nodes into tuple tokens representing inline markdowns including regular text
 # Parameters:
 # old_nodes -> List of textnodes
 # Return:
 # tokenized_nodes -> 2D list containing list of tuples (type, val) per node
+
+#TODO: Implement image and link as well. If not, it will break down image and links
+ #![**image**](/). Alt text in an image is literal
 def tokenizer(old_nodes):
     tokenized_nodes = []
     for node in old_nodes:
@@ -39,6 +42,41 @@ def tokenizer(old_nodes):
                         node_tuples_list.append(("TEXT", current_text))
                         current_text = ""
                         node_tuples_list.append(("CODE", 1))
+                case "!":
+                    if len(current_text) == 0:
+                        node_tuples_list.append(("EXC_MARK", "!"))
+                    else:
+                        node_tuples_list.append(("TEXT", current_text))
+                        current_text = ""
+                        node_tuples_list.append(("EXC_MARK", "!"))
+                case "[":
+                    if len(current_text) == 0:
+                        node_tuples_list.append(("OP_BRACKET", 1))
+                    else:
+                        node_tuples_list.append(("TEXT", current_text))
+                        current_text = ""
+                        node_tuples_list.append(("OP_BRACKET", 1))
+                case "]":
+                    if len(current_text) == 0:
+                        node_tuples_list.append(("CL_BRACKET", 1))
+                    else:
+                        node_tuples_list.append(("TEXT", current_text))
+                        current_text = ""
+                        node_tuples_list.append(("CL_BRACKET", 1))
+                case "(":
+                    if len(current_text) == 0:
+                        node_tuples_list.append(("OP_PA", 1))
+                    else:
+                        node_tuples_list.append(("TEXT", current_text))
+                        current_text = ""
+                        node_tuples_list.append(("OP_PA", 1))
+                case ")":
+                    if len(current_text) == 0:
+                        node_tuples_list.append(("CL_PA", 1))
+                    else:
+                        node_tuples_list.append(("TEXT", current_text))
+                        current_text = ""
+                        node_tuples_list.append(("CL_PA", 1))
                 case _:
                     current_text += index
 
@@ -66,6 +104,22 @@ def tokenizer(old_nodes):
         tokenized_nodes.append(filtered_tuples_list)
     return tokenized_nodes
 
+# Description: Takes 2D List of tokens and converts them into AST Dictionary that consists of {type, value, children}
+# Parameters:
+# node_tokens_list -> 2D list consists of list of tuple tokens per node
+# List ->[ node1 ->[ tuple(type, val) ], node2 ->[ tuple(type, val) ], node3 ->[ tuple(type, val) ]]
+# Return:
+# AST -> Dictionary .......
+
+
+# CURRENT Path
+# Markdown -> markdown_to_html -> markdown_to_block -> text_to_textnode
+
+def AST(node_tokens_list):
+    AST_Dict = {}
+
+
+    return
         
 
 # Description: Divides a list of text nodes into new text nodes using the entered delimiter and textype
