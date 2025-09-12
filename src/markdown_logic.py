@@ -9,9 +9,6 @@ import re
 # old_nodes -> List of textnodes
 # Return:
 # tokenized_nodes -> 2D list containing list of tuples (type, val) per node
-
-#TODO: Implement image and link as well. If not, it will break down image and links
- #![**image**](/). Alt text in an image is literal
 def tokenizer(old_nodes):
     tokenized_nodes = []
     for node in old_nodes:
@@ -44,25 +41,25 @@ def tokenizer(old_nodes):
                         node_tuples_list.append(("CODE", 1))
                 case "!":
                     if len(current_text) == 0:
-                        node_tuples_list.append(("EXC_MARK", "!"))
+                        node_tuples_list.append(("EX_MARK", "!"))
                     else:
                         node_tuples_list.append(("TEXT", current_text))
                         current_text = ""
-                        node_tuples_list.append(("EXC_MARK", "!"))
+                        node_tuples_list.append(("EX_MARK", "!"))
                 case "[":
                     if len(current_text) == 0:
-                        node_tuples_list.append(("OP_BRACKET", 1))
+                        node_tuples_list.append(("OP_BR", 1))
                     else:
                         node_tuples_list.append(("TEXT", current_text))
                         current_text = ""
-                        node_tuples_list.append(("OP_BRACKET", 1))
+                        node_tuples_list.append(("OP_BR", 1))
                 case "]":
                     if len(current_text) == 0:
-                        node_tuples_list.append(("CL_BRACKET", 1))
+                        node_tuples_list.append(("CL_BR", 1))
                     else:
                         node_tuples_list.append(("TEXT", current_text))
                         current_text = ""
-                        node_tuples_list.append(("CL_BRACKET", 1))
+                        node_tuples_list.append(("CL_BR", 1))
                 case "(":
                     if len(current_text) == 0:
                         node_tuples_list.append(("OP_PA", 1))

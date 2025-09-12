@@ -214,27 +214,62 @@ class TestTokenizer(unittest.TestCase):
     def test_tokenizer_image(self):
         textnode = TextNode("This is a node with ![image alt](image source) in it!", TextType.TEXT)
         tokens = tokenizer([textnode])
-        self.assertEqual(tokens, [("TEXT", "This is a node with "), ("EX_MARK", "!"), ("OP_BR", 1), ("TEXT", "image alt"), ("CL_BR", 1), ("OP_PA", 1), ("TEXT", "image source"), (), (), ()])
+        self.assertEqual(tokens, [[("TEXT", "This is a node with "), ("EX_MARK", "!"), ("OP_BR", 1), ("TEXT", "image alt"), ("CL_BR", 1), ("OP_PA", 1), ("TEXT", "image source"), ("CL_PA", 1), ("TEXT", " in it"), ("EX_MARK", "!")]])
+    
     def test_tokenizer_image2(self):
-        pass
-
-    def test_tokenizer_image3(self):
-        pass
-
-    def test_tokenizer_image4(self):
-        pass
-
+        textnode = TextNode("![**image 1**](source) and ![[__image alt__]](source)!", TextType.TEXT)
+        tokens = tokenizer([textnode])
+        self.assertEqual(tokens, [[
+            ("EX_MARK", "!"),
+            ("OP_BR", 1),
+            ("STAR", 2),
+            ("TEXT", "image 1"),
+            ("STAR", 2),
+            ("CL_BR", 1),
+            ("OP_PA", 1),
+            ("TEXT", "source"),
+            ("CL_PA", 1),
+            ("TEXT", " and "),
+            ("EX_MARK", "!"),
+            ("OP_BR", 2),
+            ("UNDERSCORE", 2),
+            ("TEXT", "image alt"),
+            ("UNDERSCORE", 2),
+            ("CL_BR", 2),
+            ("OP_PA", 1),
+            ("TEXT", "source"),
+            ("CL_PA", 1),
+            ("EX_MARK", "!")
+        ]])
+    
     def test_tokenizer_link(self):
-        pass
-
+        textnode = TextNode("This is a node with [link text](link source) in it!", TextType.TEXT)
+        tokens = tokenizer([textnode])
+        self.assertEqual(tokens, [[("TEXT", "This is a node with "), ("OP_BR", 1), ("TEXT", "link text"), ("CL_BR", 1), ("OP_PA", 1), ("TEXT", "link source"), ("CL_PA", 1), ("TEXT", " in it"), ("EX_MARK", "!")]])
+    
     def test_tokenizer_link2(self):
-        pass
-
-    def test_tokenizer_link3(self):
-        pass
-
-    def test_tokenizer_link4(self):
-        pass
+        textnode = TextNode("[**link 1**](source) and [[__link text__]](source)!", TextType.TEXT)
+        tokens = tokenizer([textnode])
+        self.assertEqual(tokens, [[
+            ("OP_BR", 1),
+            ("STAR", 2),
+            ("TEXT", "link 1"),
+            ("STAR", 2),
+            ("CL_BR", 1),
+            ("OP_PA", 1),
+            ("TEXT", "source"),
+            ("CL_PA", 1),
+            ("TEXT", " and "),
+            ("OP_BR", 2),
+            ("UNDERSCORE", 2),
+            ("TEXT", "link text"),
+            ("UNDERSCORE", 2),
+            ("CL_BR", 2),
+            ("OP_PA", 1),
+            ("TEXT", "source"),
+            ("CL_PA", 1),
+            ("EX_MARK", "!")
+        ]])
 
 class TestSplitDelimiter(unittest.TestCase):
     def test_split_nodes_delimiter_1_child(self):
