@@ -4,119 +4,117 @@ from block_logic import BlockType, markdown_to_blocks, block_to_block_type
 import re
 
 
-# Description: Seperates old text nodes into tuple tokens representing inline markdowns including regular text
+# Description: Seperates a line into tuple tokens representing inline markdowns including regular text
 # Parameters:
-# old_nodes -> List of textnodes
+# line -> line of string type of a block
 # Return:
-# tokenized_nodes -> 2D list containing list of tuples (type, val) per node
-def tokenizer(old_nodes):
-    tokenized_nodes = []
-    for node in old_nodes:
-        node_tuples_list = []
-        current_text = ""
-        # Converts indexes into tuple(type, val)
-        for index in node.text:
-            match(index):
-                case "*":
-                    if len(current_text) == 0:
-                        node_tuples_list.append(("STAR", 1))
-                    else:
-                        node_tuples_list.append(("TEXT", current_text))
-                        current_text = ""
-                        node_tuples_list.append(("STAR", 1))
+# tokenized_nodes -> list containing list of tuples (type, val) of a line 
+def tokenizer(line):
+    filtered_tuples_list = []
+    node_tuples_list = []
+    current_text = ""
+    # Converts indexes into tuple(type, val)
+    for index in line:
+        match(index):
+            case "*":
+                if len(current_text) == 0:
+                    node_tuples_list.append(("STAR", 1))
+                else:
+                    node_tuples_list.append(("TEXT", current_text))
+                    current_text = ""
+                    node_tuples_list.append(("STAR", 1))
 
-                case "_":
-                    if len(current_text) == 0:
-                        node_tuples_list.append(("UNDERSCORE", 1))
-                    else:
-                        node_tuples_list.append(("TEXT", current_text))
-                        current_text = ""
-                        node_tuples_list.append(("UNDERSCORE", 1))
-                case "`":
-                    if len(current_text) == 0:
-                        node_tuples_list.append(("CODE", 1))
-                    else:
-                        node_tuples_list.append(("TEXT", current_text))
-                        current_text = ""
-                        node_tuples_list.append(("CODE", 1))
-                case "!":
-                    if len(current_text) == 0:
-                        node_tuples_list.append(("EX_MARK", "!"))
-                    else:
-                        node_tuples_list.append(("TEXT", current_text))
-                        current_text = ""
-                        node_tuples_list.append(("EX_MARK", "!"))
-                case "[":
-                    if len(current_text) == 0:
-                        node_tuples_list.append(("OP_BR", 1))
-                    else:
-                        node_tuples_list.append(("TEXT", current_text))
-                        current_text = ""
-                        node_tuples_list.append(("OP_BR", 1))
-                case "]":
-                    if len(current_text) == 0:
-                        node_tuples_list.append(("CL_BR", 1))
-                    else:
-                        node_tuples_list.append(("TEXT", current_text))
-                        current_text = ""
-                        node_tuples_list.append(("CL_BR", 1))
-                case "(":
-                    if len(current_text) == 0:
-                        node_tuples_list.append(("OP_PA", 1))
-                    else:
-                        node_tuples_list.append(("TEXT", current_text))
-                        current_text = ""
-                        node_tuples_list.append(("OP_PA", 1))
-                case ")":
-                    if len(current_text) == 0:
-                        node_tuples_list.append(("CL_PA", 1))
-                    else:
-                        node_tuples_list.append(("TEXT", current_text))
-                        current_text = ""
-                        node_tuples_list.append(("CL_PA", 1))
-                case _:
-                    current_text += index
+            case "_":
+                if len(current_text) == 0:
+                    node_tuples_list.append(("UNDERSCORE", 1))
+                else:
+                    node_tuples_list.append(("TEXT", current_text))
+                    current_text = ""
+                    node_tuples_list.append(("UNDERSCORE", 1))
+            case "`":
+                if len(current_text) == 0:
+                    node_tuples_list.append(("CODE", 1))
+                else:
+                    node_tuples_list.append(("TEXT", current_text))
+                    current_text = ""
+                    node_tuples_list.append(("CODE", 1))
+            case "!":
+                if len(current_text) == 0:
+                    node_tuples_list.append(("EX_MARK", "!"))
+                else:
+                    node_tuples_list.append(("TEXT", current_text))
+                    current_text = ""
+                    node_tuples_list.append(("EX_MARK", "!"))
+            case "[":
+                if len(current_text) == 0:
+                    node_tuples_list.append(("OP_BR", 1))
+                else:
+                    node_tuples_list.append(("TEXT", current_text))
+                    current_text = ""
+                    node_tuples_list.append(("OP_BR", 1))
+            case "]":
+                if len(current_text) == 0:
+                    node_tuples_list.append(("CL_BR", 1))
+                else:
+                    node_tuples_list.append(("TEXT", current_text))
+                    current_text = ""
+                    node_tuples_list.append(("CL_BR", 1))
+            case "(":
+                if len(current_text) == 0:
+                    node_tuples_list.append(("OP_PA", 1))
+                else:
+                    node_tuples_list.append(("TEXT", current_text))
+                    current_text = ""
+                    node_tuples_list.append(("OP_PA", 1))
+            case ")":
+                if len(current_text) == 0:
+                    node_tuples_list.append(("CL_PA", 1))
+                else:
+                    node_tuples_list.append(("TEXT", current_text))
+                    current_text = ""
+                    node_tuples_list.append(("CL_PA", 1))
+            case _:
+                current_text += index
 
-        if len(current_text) != 0:
-            node_tuples_list.append(("TEXT", current_text))
+    if len(current_text) != 0:
+        node_tuples_list.append(("TEXT", current_text))
        
+    ptr1 = 0
+    ptr2 = 1
+    # Merges tuples which have the same type by adding their values together
+    while(ptr2 < len(node_tuples_list)):
+   
+        if node_tuples_list[ptr1][0] == node_tuples_list[ptr2][0]:
+            node_tuples_list[ptr2] = (node_tuples_list[ptr2][0], node_tuples_list[ptr2][1] + node_tuples_list[ptr1][1])
+        else:
+            filtered_tuples_list.append(node_tuples_list[ptr1])
+        ptr1 += 1
+        ptr2 += 1
             
-        ptr1 = 0
-        ptr2 = 1
-        filtered_tuples_list = []
-        # Merges tuples which have the same type by adding their values together
-        while(ptr2 < len(node_tuples_list)):
-       
-            if node_tuples_list[ptr1][0] == node_tuples_list[ptr2][0]:
-                node_tuples_list[ptr2] = (node_tuples_list[ptr2][0], node_tuples_list[ptr2][1] + node_tuples_list[ptr1][1])
-            else:
-                filtered_tuples_list.append(node_tuples_list[ptr1])
-            ptr1 += 1
-            ptr2 += 1
-                
-        filtered_tuples_list.append(node_tuples_list[ptr2 - 1])
-        if len(node_tuples_list) == 1:
-            filtered_tuples_list = node_tuples_list
+    filtered_tuples_list.append(node_tuples_list[ptr2 - 1])
+    if len(node_tuples_list) == 1:
+        filtered_tuples_list = node_tuples_list
 
-        tokenized_nodes.append(filtered_tuples_list)
-    return tokenized_nodes
+    return filtered_tuples_list 
 
-# Description: Takes 2D List of tokens and converts them into AST Dictionary that consists of {type, value, children}
+# Description: 
 # Parameters:
-# node_tokens_list -> 2D list consists of list of tuple tokens per node
-# List ->[ node1 ->[ tuple(type, val) ], node2 ->[ tuple(type, val) ], node3 ->[ tuple(type, val) ]]
+# 
+# 
 # Return:
-# AST -> Dictionary .......
+#
 
 
 # CURRENT Path
 # Markdown -> markdown_to_html -> markdown_to_block -> text_to_textnode
 
+#NOTE: AST will turn tokens into textnodes
 def AST(node_tokens_list):
-    AST_Dict = {}
-
-
-    return
+    
+    pre_ast_nodes = []
+    for node_tokens in node_tokens_list:
+        pass
+    
         
 
 # Description: Divides a list of text nodes into new text nodes using the entered delimiter and textype
@@ -258,9 +256,9 @@ def split_nodes_link(old_nodes):
 
     return new_nodes
 
-
-def text_to_textnode(text, function_debug = None):
-    t_nodes = [TextNode(text, TextType.TEXT)]
+# Description: Takes a line of a block and splits it into as many inline markdown node as possible
+def text_to_textnode(line, function_debug = None):
+    t_nodes = [TextNode(line, TextType.TEXT)]
 
     detected_delimiter = True
     while detected_delimiter == True:
