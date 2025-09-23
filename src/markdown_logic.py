@@ -1,9 +1,20 @@
 from htmlnode import ParentNode, LeafNode
 from textnode import TextNode, TextType, text_node_to_html_node
 from block_logic import BlockType, markdown_to_blocks, block_to_block_type
+from enum import Enum
 import re
 
+class TokenSymbols(Enum):
+    EX_MARK = "!"
+    OP_BR = "["
+    CL_BR = "]"
+    OP_PA = "("
+    CL_PA = ")"
+    STAR = "*"
+    UNDERSCORE = "_"
+    CODE = "`"
 
+    
 # Description: Seperates a line into tuple tokens representing inline markdowns including regular text
 # Parameters:
 # line -> line of string type of a block
@@ -97,6 +108,24 @@ def tokenizer(line):
 
     return filtered_tuples_list 
 
+
+
+def add_symbols(token):
+    token_string = ""
+    symbol = TokenSymbols[token[0]]
+    
+    diff = 0
+    if symbol == TokenSymbols.OP_BR or symbol == TokenSymbols.CL_BR or symbol == TokenSymbols.OP_PA or symbol == TokenSymbols.CL_PA:
+        diff += 1
+    x = 0
+    while x < (token[1] - diff):
+        token_string += symbol.value
+        x += 1
+
+    return token_string
+
+
+
 # Description: 
 # Parameters:
 # 
@@ -107,15 +136,73 @@ def tokenizer(line):
 
 # CURRENT Path
 # Markdown -> markdown_to_html -> markdown_to_block -> text_to_textnode
+def merge_image_tokens(tokens):
+    new_tokens = []
+
+    alt = ""
+    src = ""
+    # image_types = ["EX_MARK", "OP_BR", "CL_BR", "OP_PA", "CL_PA"]
+    x = 0
+    while x < len(tokens):
+        if tokens[x][0] == "EX_MARK" and tokens[x][1] == "OP_BR":
+            x += 2
+            if tokens[x][0] == "OP_BR":
+                while tokens[x][0] != "CL_BR" or x < len(tokens):
+                    if tokens[x][0] == "TEXT":
+                        alt += tokens[x]
+                    elif tokens[x][0] in TokenSymbols:
+                        alt += add_symbols(tokens[x])
+                    else:
+                        raise Exception(f"Unexpected behavior encountered!\n  Tokens: {tokens}\n  Current Token:{tokens[x]}\n  x:{x}\n")
+                    x += 1
+            
+            if tokens[x][0] == "CL_BR" and tokens[x][1] > 1:
+                alt += add_symbols(tokens[x])
+        elif tokens[x - 1][0] == "CL_BR" and tokens[x][0] == "OP_PA":
+            while tokens[x][0] != "CL_PA" or x < len(tokens):
+                if tokens[x][0] == "TEXT":
+                    src += tokens[x]
+                elif tokens[x][0] in TokenSymbols:
+                    src += add_symbols(tokens[x])
+                else:
+                    raise Exception(f"Unexpected behavior encountered!\n  Tokens: {tokens}\n  Current Token:{tokens[x]}\n  x:{x}\n")
+                x += 1
+            
+            if tokens[x][0] == "CL_PA" and tokens[x][1] > 1:
+                src += add_symbols(tokens[x])
+                image_node = TextNode("img", "", {"alt": alt, "src": src})
+                new_tokens.append(image_node)
+        else:
+            new_tokens.append(tokens[x])
+        x += 1
+    
+    for token in new_tokens:
+        if isinstance(token, TextNode):
+            return new_tokens
+    return tokens 
+    
 
 #NOTE: AST will turn tokens into textnodes
-def AST(node_tokens_list):
-    
-    pre_ast_nodes = []
-    for node_tokens in node_tokens_list:
-        pass
-    
-        
+# node_tokens_list -> 1D list
+def AST(tokens):
+
+    new_tokens = merge_image_tokens(tokens)
+
+    #TODO: Write tests for this
+    return new_tokens
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # Description: Divides a list of text nodes into new text nodes using the entered delimiter and textype
 # Parameters:
