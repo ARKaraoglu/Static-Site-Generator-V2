@@ -65,7 +65,7 @@ class TestTextNode(unittest.TestCase):
         assert isinstance(htmlnode, LeafNode)
         
         self.assertIsInstance(htmlnode, LeafNode)
-        self.assertEqual(htmlnode.to_html(), "<b>This is a bold</b>")
+        self.assertEqual(htmlnode.to_html(), "<strong>This is a bold</strong>")
 
     def test_textnode_to_html3(self):
         textnode = TextNode("This is an italic", TextType.ITALIC)
@@ -74,7 +74,7 @@ class TestTextNode(unittest.TestCase):
         assert isinstance(htmlnode, LeafNode)
         
         self.assertIsInstance(htmlnode, LeafNode)
-        self.assertEqual(htmlnode.to_html(), "<i>This is an italic</i>")
+        self.assertEqual(htmlnode.to_html(), "<em>This is an italic</em>")
 
     def test_textnode_to_html4(self):
         textnode = TextNode("This is a code", TextType.CODE)

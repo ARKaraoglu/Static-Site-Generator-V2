@@ -118,6 +118,10 @@ def add_symbols(token):
     if symbol == TokenSymbols.OP_BR or symbol == TokenSymbols.CL_BR or symbol == TokenSymbols.OP_PA or symbol == TokenSymbols.CL_PA:
         diff += 1
     x = 0
+    
+    if token[1] == "!":
+        return "!"
+
     while x < (token[1] - diff):
         token_string += symbol.value
         x += 1
@@ -139,42 +143,52 @@ def add_symbols(token):
 def merge_image_tokens(tokens):
     new_tokens = []
 
-    alt = ""
-    src = ""
     # image_types = ["EX_MARK", "OP_BR", "CL_BR", "OP_PA", "CL_PA"]
     x = 0
     while x < len(tokens):
-        if tokens[x][0] == "EX_MARK" and tokens[x][1] == "OP_BR":
-            x += 2
-            if tokens[x][0] == "OP_BR":
-                while tokens[x][0] != "CL_BR" or x < len(tokens):
-                    if tokens[x][0] == "TEXT":
-                        alt += tokens[x]
-                    elif tokens[x][0] in TokenSymbols:
-                        alt += add_symbols(tokens[x])
-                    else:
-                        raise Exception(f"Unexpected behavior encountered!\n  Tokens: {tokens}\n  Current Token:{tokens[x]}\n  x:{x}\n")
-                    x += 1
-            
+        alt = ""
+        src = ""
+        
+        if tokens[x][0] == "EX_MARK" and tokens[x + 1][0] == "OP_BR":
+            x += 1
+            while tokens[x][0] != "CL_BR" and x < len(tokens):
+                if tokens[x][0] == "TEXT":
+                    alt += tokens[x][1]
+                elif TokenSymbols[tokens[x][0]]:
+                    alt += add_symbols(tokens[x])
+                else:
+                    raise Exception(f"Unexpected behavior encountered!\n  Tokens: {tokens}\n  Current Token:{tokens[x]}\n  alt:{alt}\n  src:{src}\n  x:{x}\n")
+                x += 1
             if tokens[x][0] == "CL_BR" and tokens[x][1] > 1:
                 alt += add_symbols(tokens[x])
-        elif tokens[x - 1][0] == "CL_BR" and tokens[x][0] == "OP_PA":
-            while tokens[x][0] != "CL_PA" or x < len(tokens):
-                if tokens[x][0] == "TEXT":
-                    src += tokens[x]
-                elif tokens[x][0] in TokenSymbols:
-                    src += add_symbols(tokens[x])
-                else:
-                    raise Exception(f"Unexpected behavior encountered!\n  Tokens: {tokens}\n  Current Token:{tokens[x]}\n  x:{x}\n")
+
+        
+            if tokens[x][0] == "CL_BR" and tokens[x + 1][0] == "OP_PA":
                 x += 1
-            
-            if tokens[x][0] == "CL_PA" and tokens[x][1] > 1:
-                src += add_symbols(tokens[x])
-                image_node = TextNode("img", "", {"alt": alt, "src": src})
+                while tokens[x][0] != "CL_PA" and x < len(tokens):
+                    if tokens[x][0] == "TEXT":
+                        src += tokens[x][1]
+                    elif TokenSymbols[tokens[x][0]]:
+                        src += add_symbols(tokens[x])
+                    else:
+                        raise Exception(f"Unexpected behavior encountered!\n  Tokens: {tokens}\n  Current Token:{tokens[x]}\n  alt:{alt}\n  src:{src}\n  x:{x}\n")
+                    x += 1
+                if tokens[x][0] == "CL_PA" and tokens[x][1] > 1:
+                    src += add_symbols(tokens[x])
+                
+                image_node = TextNode(alt, TextType.IMAGE, src)
                 new_tokens.append(image_node)
+                x += 1
+            else:
+                new_tokens.extend(tokens[:x])
+
         else:
             new_tokens.append(tokens[x])
-        x += 1
+            x += 1
+        
+        if x + 1 == len(tokens):
+            new_tokens.extend(tokens[x:])
+            break
     
     for token in new_tokens:
         if isinstance(token, TextNode):
