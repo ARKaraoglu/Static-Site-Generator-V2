@@ -1,7 +1,7 @@
 import unittest
 from textnode import TextNode, TextType
 from htmlnode import ParentNode, LeafNode
-from markdown_logic import tokenizer, TokenSymbols, add_symbols, merge_image_tokens, AST, split_nodes_delimiter, extract_markdown_images, extract_markdown_links, split_nodes_image, split_nodes_link, text_to_textnode, markdown_to_html
+from markdown_logic import merge_link_tokens, tokenizer, TokenSymbols, add_symbols, merge_image_tokens, AST, split_nodes_delimiter, extract_markdown_images, extract_markdown_links, split_nodes_image, split_nodes_link, text_to_textnode, markdown_to_html
 
 class TestTokenizer(unittest.TestCase):
     def test_tokenizer_text(self):
@@ -273,6 +273,38 @@ class TestTokenizer(unittest.TestCase):
             ("EX_MARK", "!")
         ])
 
+    def test_tokenizer_excess_whitespace(self):
+        line = "  ![**image 1**](source)  and  ![[__image alt__]](source)!  "
+        tokens = tokenizer(line)
+        self.assertEqual(tokens, [
+            ("EX_MARK", "!"),
+            ("OP_BR", 1),
+            ("STAR", 2),
+            ("TEXT", "image 1"),
+            ("STAR", 2),
+            ("CL_BR", 1),
+            ("OP_PA", 1),
+            ("TEXT", "source"),
+            ("CL_PA", 1),
+            ("TEXT", " and "),
+            ("EX_MARK", "!"),
+            ("OP_BR", 2),
+            ("UNDERSCORE", 2),
+            ("TEXT", "image alt"),
+            ("UNDERSCORE", 2),
+            ("CL_BR", 2),
+            ("OP_PA", 1),
+            ("TEXT", "source"),
+            ("CL_PA", 1),
+            ("EX_MARK", "!")
+        ])
+    
+    def test_tokenizer_excess_whitespace2(self):
+        line = "    This    is    a       textnode   with * bold   *       text in   it "
+        tokens = tokenizer(line)
+        self.assertEqual(tokens, [("TEXT", "This is a textnode with "), ("STAR", 1), ("TEXT", " bold "), ("STAR", 1), ("TEXT", " text in it")])
+
+
 class TestMergeImageTokens(unittest.TestCase):
     def test_merge_image_tokens(self):
         line = "This is a line with ![image alt](#) in it!"
@@ -304,6 +336,85 @@ class TestMergeImageTokens(unittest.TestCase):
         tokens = tokenizer(line)
         new_tokens = merge_image_tokens(tokens)
         self.assertEqual(new_tokens, [("TEXT", "This is a line with "),("EX_MARK", "!"),("OP_BR", 1), ("TEXT", "image alt"),("CL_BR", 1),("TEXT", " "),("OP_PA", 1), ("TEXT", "#"), ("CL_PA", 1), ("TEXT", " in it"), ("EX_MARK", "!")])
+
+    def test_merge_image_tokens_wrong_image_format2(self):
+        line = "This is a line with ![image alt"
+        tokens = tokenizer(line)
+        new_tokens = merge_image_tokens(tokens)
+        self.assertEqual(new_tokens, [("TEXT", "This is a line with "),("EX_MARK", "!"),("OP_BR", 1), ("TEXT", "image alt")])
+    
+    def test_merge_image_tokens_wrong_image_format3(self):
+        line = "This is a line with ![image alt]]"
+        tokens = tokenizer(line)
+        new_tokens = merge_image_tokens(tokens)
+        self.assertEqual(new_tokens, [("TEXT", "This is a line with "),("EX_MARK", "!"),("OP_BR", 1), ("TEXT", "image alt"),("CL_BR", 2)])
+    
+    def test_merge_image_tokens_wrong_image_format4(self):
+        line = "This is a line with ![image alt](#))"
+        tokens = tokenizer(line)
+        new_tokens = merge_image_tokens(tokens)
+        self.assertEqual(new_tokens, [("TEXT", "This is a line with "),TextNode("image alt", TextType.IMAGE, "#)")])
+
+    def test_merge_image_tokens_wrong_format(self):
+        line = "This is a line with ![image alt] a wrong image in it!"
+        tokens = tokenizer(line)
+        new_tokens = merge_image_tokens(tokens)
+        self.assertEqual(new_tokens, [("TEXT", "This is a line with "), ("EX_MARK", "!"), ("OP_BR", 1), ("TEXT", "image alt"), ("CL_BR", 1), ("TEXT", " a wrong image in it"), ("EX_MARK", "!")])
+
+    def test_merge_image_tokens_wrong_format2(self):
+        line = "This is a line with ![image alt] a wrong ![alt](source)image in it!"
+        tokens = tokenizer(line)
+        new_tokens = merge_image_tokens(tokens)
+        self.assertEqual(new_tokens, [("TEXT", "This is a line with "), ("EX_MARK", "!"), ("OP_BR", 1), ("TEXT", "image alt"), ("CL_BR", 1), ("TEXT", " a wrong "), (TextNode("alt", TextType.IMAGE, "source")), ("TEXT", "image in it"), ("EX_MARK", "!")])
+
+    def test_merge_image_tokens_wrong_format3(self):
+        line = "This is a line with ![image alt]* a wrong ![alt](source)image in it!"
+        tokens = tokenizer(line)
+        new_tokens = merge_image_tokens(tokens)
+        self.assertEqual(new_tokens, [("TEXT", "This is a line with "), ("EX_MARK", "!"), ("OP_BR", 1), ("TEXT", "image alt"), ("CL_BR", 1), ("STAR", 1), ("TEXT", " a wrong "), (TextNode("alt", TextType.IMAGE, "source")), ("TEXT", "image in it"), ("EX_MARK", "!")])
+
+
+class TextMergeLinkTokens(unittest.TestCase):
+    def test_merge_link_tokens(self):
+        line = "This line has 1 link  [link alt](link url) in it!"
+        tokens = tokenizer(line)
+        new_tokens = merge_link_tokens(tokens)
+        self.assertEqual(new_tokens, [("TEXT", "This line has 1 link "), (TextNode("link alt", TextType.LINK, "link url")), ("TEXT", " in it"), ("EX_MARK", "!")])
+
+    def test_merge_link_tokens2(self):
+        line = "[[link text]](())This line has more [text](link) than 1 link in it! [**link text**](https://url)"
+        tokens = tokenizer(line)
+        new_tokens = merge_link_tokens(tokens)
+        self.assertEqual(new_tokens, [(TextNode("[link text]", TextType.LINK, "()")),("TEXT", "This line has more "),(TextNode("text", TextType.LINK, "link")),("TEXT", " than 1 link in it"),("EX_MARK", "!"), ("TEXT", " "),(TextNode("**link text**", TextType.LINK, "https://url"))])
+
+    def test_merge_link_tokens_with_image_node(self):
+        line = "[text] (url)This line has [****]![image alt](**image source**) image [link text](link url) node in it!"
+        tokens = tokenizer(line)
+        new_tokens = merge_image_tokens(tokens)
+        new_tokens2 = merge_link_tokens(new_tokens)
+        # print(f"line:{line}\n")
+        # print(f"tokens:{tokens}\n")
+        # print(f"new_tokens:{new_tokens}\n")
+        # print(f"new_tokens2{new_tokens2}\n")
+        # print([("OP_BR", 1), ("TEXT", "text"), ("CL_BR", 1), ("TEXT", " "), ("OP_PA", 1), ("TEXT", "url"), ("CL_PA", 1), ("TEXT", "This line has "), ("OP_BR", 1), ("STAR", 4), ("CL_BR", 1), (TextNode("image alt", TextType.IMAGE, "**image source**")), ("TEXT", " image "), (TextNode("link text", TextType.LINK, "link url")), ("TEXT", " node in it"), ("EX_MARK", "!")])
+        self.assertEqual(new_tokens2, [("OP_BR", 1), ("TEXT", "text"), ("CL_BR", 1), ("TEXT", " "), ("OP_PA", 1), ("TEXT", "url"), ("CL_PA", 1), ("TEXT", "This line has "), ("OP_BR", 1), ("STAR", 4), ("CL_BR", 1), (TextNode("image alt", TextType.IMAGE, "**image source**")), ("TEXT", " image "), (TextNode("link text", TextType.LINK, "link url")), ("TEXT", " node in it"), ("EX_MARK", "!")])
+
+    def test_merge_link_tokens_inline_image_node(self):
+        line = "There is a link with image [![image alt](image source)](link url) as link text in this line"
+        tokens = tokenizer(line)
+        new_tokens = merge_image_tokens(tokens)
+        new_tokens2 = merge_link_tokens(new_tokens)
+        test_image_node = TextNode("image alt", TextType.IMAGE, "image source")
+        self.assertEqual(new_tokens2, [("TEXT", "There is a link with image "), (TextNode(f"{test_image_node.__repr__()}", TextType.LINK, "link url")), ("TEXT", " as link text in this line")])
+
+    def test_merge_link_tokens_inline_image_node2(self):
+        line = "There is a link with image [**![image alt](image source)**](link url) as link text in this line"
+        tokens = tokenizer(line)
+        new_tokens = merge_image_tokens(tokens)
+        new_tokens2 = merge_link_tokens(new_tokens)
+        test_image_node = TextNode("image alt", TextType.IMAGE, "image source")
+        self.assertEqual(new_tokens2, [("TEXT", "There is a link with image "), (TextNode(f"**{test_image_node.__repr__()}**", TextType.LINK, "link url")), ("TEXT", " as link text in this line")])
+
 
 class TestSplitDelimiter(unittest.TestCase):
     def test_split_nodes_delimiter_1_child(self):

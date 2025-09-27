@@ -14,13 +14,43 @@ class TokenSymbols(Enum):
     UNDERSCORE = "_"
     CODE = "`"
 
-    
+# Description: Removes extra leading, trailing or whitespace between words from a text tuple
+# Parameters:
+# tuple_list -> list of tuples
+# Return:
+# new_list -> list of tuples
+def remove_whitespace(tuple_list):
+    new_list = []
+
+    for t in tuple_list:
+        
+        if t[0] != "TEXT":
+            new_list.append(t)
+        else:
+            tuple_text = t[1]
+            stripped_tuple_text = ""
+            whitespace = False
+            for i in tuple_text:
+                if i == " " and whitespace == False:
+                    whitespace = True
+                    stripped_tuple_text += " "
+                elif i == " " and whitespace == True:
+                    continue
+                else:
+                    whitespace = False
+                    stripped_tuple_text += i
+
+            new_list.append(("TEXT", stripped_tuple_text))
+    return new_list
+
+
 # Description: Seperates a line into tuple tokens representing inline markdowns including regular text
 # Parameters:
 # line -> line of string type of a block
 # Return:
 # tokenized_nodes -> list containing list of tuples (type, val) of a line 
 def tokenizer(line):
+    line = line.strip()
     filtered_tuples_list = []
     node_tuples_list = []
     current_text = ""
@@ -106,7 +136,8 @@ def tokenizer(line):
     if len(node_tuples_list) == 1:
         filtered_tuples_list = node_tuples_list
 
-    return filtered_tuples_list 
+    stripped_tuple_list = remove_whitespace(filtered_tuples_list)
+    return stripped_tuple_list 
 
 
 
@@ -130,16 +161,11 @@ def add_symbols(token):
 
 
 
-# Description: 
+# Description: Merges valid tuple tokens into an image textnode and returns a new list of tokens
 # Parameters:
-# 
-# 
+# tokens -> list of tuple tokens
 # Return:
-#
-
-
-# CURRENT Path
-# Markdown -> markdown_to_html -> markdown_to_block -> text_to_textnode
+# new_token -> list of tuple tokens with image textnode if possible
 def merge_image_tokens(tokens):
     new_tokens = []
 
@@ -151,7 +177,7 @@ def merge_image_tokens(tokens):
         
         if tokens[x][0] == "EX_MARK" and tokens[x + 1][0] == "OP_BR":
             x += 1
-            while tokens[x][0] != "CL_BR" and x < len(tokens):
+            while tokens[x][0] != "CL_BR" and x < len(tokens) - 1:
                 if tokens[x][0] == "TEXT":
                     alt += tokens[x][1]
                 elif TokenSymbols[tokens[x][0]]:
@@ -159,9 +185,12 @@ def merge_image_tokens(tokens):
                 else:
                     raise Exception(f"Unexpected behavior encountered!\n  Tokens: {tokens}\n  Current Token:{tokens[x]}\n  alt:{alt}\n  src:{src}\n  x:{x}\n")
                 x += 1
+
             if tokens[x][0] == "CL_BR" and tokens[x][1] > 1:
                 alt += add_symbols(tokens[x])
 
+            if x == len(tokens) - 1:
+                break
         
             if tokens[x][0] == "CL_BR" and tokens[x + 1][0] == "OP_PA":
                 x += 1
@@ -180,7 +209,7 @@ def merge_image_tokens(tokens):
                 new_tokens.append(image_node)
                 x += 1
             else:
-                new_tokens.extend(tokens[:x])
+                new_tokens = tokens[:x]
 
         else:
             new_tokens.append(tokens[x])
@@ -192,18 +221,115 @@ def merge_image_tokens(tokens):
     
     for token in new_tokens:
         if isinstance(token, TextNode):
-            return new_tokens
+            if token.text_type == TextType.IMAGE:
+                return new_tokens
     return tokens 
     
 
+# Description: Merges valid tuple tokens into a link textnode and returns a new list of tokens
+# Parameters:
+# tokens -> list of tuple tokens
+# Return:
+# new_token -> list of tuple tokens with link textnode if possible
+def merge_link_tokens(tokens, debug = None):
+    
+    x = 0
+    # image_types = ["OP_BR", "CL_BR", "OP_PA", "CL_PA"]
+    new_tokens = []
+    while x < len(tokens):
+        text = ""
+        url = ""
+        
+        # if debug != None:
+        #     print(new_tokens)
+
+        if isinstance(tokens[x], TextNode):
+            new_tokens.append(tokens[x])
+        elif tokens[x][0] == "OP_BR":
+            if x > 0 and tokens[x - 1][0] != "EX_MARK" or x == 0:
+                while tokens[x][0] != "CL_BR" and x < len(tokens) - 1:
+                    
+                    if debug != None:
+                        print(x, tokens[x])
+                    
+
+                    if tokens[x][0] == "TEXT":
+                        text += tokens[x][1]
+                    elif TokenSymbols[tokens[x][0]]:
+                        text += add_symbols(tokens[x])
+                    else:
+                        raise Exception(f"Unexpected behavior encountered!\n  Tokens: {tokens}\n  Current Token:{tokens[x]}\n  text:{text}\n  url:{url}\n  x:{x}\n")
+                    x += 1
+                    
+                    if isinstance(tokens[x], TextNode):
+                        if tokens[x].text_type == TextType.IMAGE:
+                            text += tokens[x].__repr__()
+                        else:
+                            raise Exception(f"Unexpected behavior encountered!\n  Tokens: {tokens}\n  Current Token:{tokens[x]}\n  text:{text}\n  url:{url}\n  x:{x}\n")
+                        x += 1
+
+        
+                # if debug != None:
+                #     print(text)
+                #     print(x)
+                #     print(tokens[:x])
+
+                if tokens[x][0] == "CL_BR" and tokens[x][1] > 1:
+                    text += add_symbols(tokens[x])
+                
+                if x == len(tokens):
+                    break
+
+                x += 1
+                if isinstance(tokens[x], TextNode):
+                    y = x
+                    temp_list = []
+                    temp_list.insert(0, tokens[y])
+                    y -= 1
+                    while tokens[y][0] != "OP_BR":
+                        temp_list.insert(0, tokens[y])
+                        y -= 1
+                    temp_list.insert(0, tokens[y])
+                    new_tokens.extend(temp_list)
+                elif tokens[x][0] == "OP_PA":
+                    while tokens[x][0] != "CL_PA" and x < len(tokens):
+                        if tokens[x][0] == "TEXT":
+                            url += tokens[x][1]
+                        elif TokenSymbols[tokens[x][0]]:
+                            url += add_symbols(tokens[x])
+                        else:
+                            raise Exception(f"Unexpected behavior encountered!\n  Tokens: {tokens}\n  Current Token:{tokens[x]}\n  text:{text}\n  url:{url}\n  x:{x}\n")
+                        x += 1
+
+                    if tokens[x][0] == "CL_PA" and tokens[x][1] > 1:
+                        url += add_symbols(tokens[x])
+                    link_node = TextNode(text, TextType.LINK, url)
+                    new_tokens.append(link_node)
+                
+                else:
+                    new_tokens = tokens[:x + 1]
+                    # new_tokens.extend(tokens[:x + 1])
+        else:
+            new_tokens.append(tokens[x])
+        x += 1
+    for token in new_tokens:
+        if isinstance(token, TextNode):
+            if token.text_type == TextType.LINK:
+                return new_tokens
+    return tokens 
+
+
+# CURRENT Path
+# Markdown -> markdown_to_html -> markdown_to_block -> text_to_textnode
 #NOTE: AST will turn tokens into textnodes
 # node_tokens_list -> 1D list
 def AST(tokens):
 
-    new_tokens = merge_image_tokens(tokens)
+    tokens_with_image = merge_image_tokens(tokens)
+    merged_link_token = merge_link_tokens(tokens_with_image)
+    #NOTE: Make sure to handle the image inside link text like this [![image](image source)](link url)
 
-    #TODO: Write tests for this
-    return new_tokens
+    return merged_link_token
 
 
 
