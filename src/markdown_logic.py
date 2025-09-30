@@ -176,6 +176,7 @@ def merge_image_tokens(tokens):
         src = ""
         
         if tokens[x][0] == "EX_MARK" and tokens[x + 1][0] == "OP_BR":
+            ex_mark = x
             x += 1
             while tokens[x][0] != "CL_BR" and x < len(tokens) - 1:
                 if tokens[x][0] == "TEXT":
@@ -186,10 +187,15 @@ def merge_image_tokens(tokens):
                     raise Exception(f"Unexpected behavior encountered!\n  Tokens: {tokens}\n  Current Token:{tokens[x]}\n  alt:{alt}\n  src:{src}\n  x:{x}\n")
                 x += 1
 
-            if tokens[x][0] == "CL_BR" and tokens[x][1] > 1:
-                alt += add_symbols(tokens[x])
+            if tokens[x][0] == "CL_BR": 
+                if tokens[x][1] > 1:
+                    alt += add_symbols(tokens[x])
+            else:
+                new_tokens += tokens[ex_mark:x]
+                continue
 
             if x == len(tokens) - 1:
+                new_tokens.extend(tokens[ex_mark:])
                 break
         
             if tokens[x][0] == "CL_BR" and tokens[x + 1][0] == "OP_PA":
@@ -202,14 +208,16 @@ def merge_image_tokens(tokens):
                     else:
                         raise Exception(f"Unexpected behavior encountered!\n  Tokens: {tokens}\n  Current Token:{tokens[x]}\n  alt:{alt}\n  src:{src}\n  x:{x}\n")
                     x += 1
-                if tokens[x][0] == "CL_PA" and tokens[x][1] > 1:
-                    src += add_symbols(tokens[x])
-                
-                image_node = TextNode(alt, TextType.IMAGE, src)
-                new_tokens.append(image_node)
+                if tokens[x][0] == "CL_PA":
+                    if tokens[x][1] > 1:
+                        src += add_symbols(tokens[x])
+                    image_node = TextNode(alt, TextType.IMAGE, src)
+                    new_tokens.append(image_node)
+                else:
+                    new_tokens += tokens[ex_mark:x + 1]
                 x += 1
             else:
-                new_tokens = tokens[:x]
+                new_tokens += tokens[ex_mark:x]
 
         else:
             new_tokens.append(tokens[x])
@@ -219,11 +227,12 @@ def merge_image_tokens(tokens):
             new_tokens.extend(tokens[x:])
             break
     
-    for token in new_tokens:
-        if isinstance(token, TextNode):
-            if token.text_type == TextType.IMAGE:
-                return new_tokens
-    return tokens 
+    # for token in new_tokens:
+    #     if isinstance(token, TextNode):
+    #         if token.text_type == TextType.IMAGE:
+    #             return new_tokens
+    # return tokens 
+    return new_tokens
     
 
 # Description: Merges valid tuple tokens into a link textnode and returns a new list of tokens
@@ -312,11 +321,7 @@ def merge_link_tokens(tokens, debug = None):
         else:
             new_tokens.append(tokens[x])
         x += 1
-    for token in new_tokens:
-        if isinstance(token, TextNode):
-            if token.text_type == TextType.LINK:
-                return new_tokens
-    return tokens 
+    return new_tokens
 
 
 # CURRENT Path

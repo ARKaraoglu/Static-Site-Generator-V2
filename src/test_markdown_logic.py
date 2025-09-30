@@ -324,7 +324,7 @@ class TestMergeImageTokens(unittest.TestCase):
         tokens = tokenizer(line)
         new_tokens = merge_image_tokens(tokens)
         self.assertEqual(new_tokens, [("TEXT", "This is a line with "),TextNode("image alt", TextType.IMAGE, "#"), ("TEXT", " more than 1 image "), TextNode("second image alt", TextType.IMAGE, "image source"), ("TEXT", "in it"), ("EX_MARK", "!")])
-    
+
     def test_merge_image_tokens_multi_image_single_link(self):
         line = "This is a line with ![image alt](#) [more than](1 image) ![second image alt](image source)in it!"
         tokens = tokenizer(line)
@@ -342,13 +342,13 @@ class TestMergeImageTokens(unittest.TestCase):
         tokens = tokenizer(line)
         new_tokens = merge_image_tokens(tokens)
         self.assertEqual(new_tokens, [("TEXT", "This is a line with "),("EX_MARK", "!"),("OP_BR", 1), ("TEXT", "image alt")])
-    
+
     def test_merge_image_tokens_wrong_image_format3(self):
         line = "This is a line with ![image alt]]"
         tokens = tokenizer(line)
         new_tokens = merge_image_tokens(tokens)
         self.assertEqual(new_tokens, [("TEXT", "This is a line with "),("EX_MARK", "!"),("OP_BR", 1), ("TEXT", "image alt"),("CL_BR", 2)])
-    
+
     def test_merge_image_tokens_wrong_image_format4(self):
         line = "This is a line with ![image alt](#))"
         tokens = tokenizer(line)
@@ -374,7 +374,7 @@ class TestMergeImageTokens(unittest.TestCase):
         self.assertEqual(new_tokens, [("TEXT", "This is a line with "), ("EX_MARK", "!"), ("OP_BR", 1), ("TEXT", "image alt"), ("CL_BR", 1), ("STAR", 1), ("TEXT", " a wrong "), (TextNode("alt", TextType.IMAGE, "source")), ("TEXT", "image in it"), ("EX_MARK", "!")])
 
 
-class TextMergeLinkTokens(unittest.TestCase):
+class TestMergeLinkTokens(unittest.TestCase):
     def test_merge_link_tokens(self):
         line = "This line has 1 link  [link alt](link url) in it!"
         tokens = tokenizer(line)
