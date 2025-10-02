@@ -1,4 +1,4 @@
-from htmlnode import ParentNode, LeafNode
+from htmlnode import HTMLNode, ParentNode, LeafNode
 from textnode import TextNode, TextType, text_node_to_html_node
 from block_logic import BlockType, markdown_to_blocks, block_to_block_type
 from enum import Enum
@@ -246,6 +246,7 @@ def merge_link_tokens(tokens, debug = None):
     # image_types = ["OP_BR", "CL_BR", "OP_PA", "CL_PA"]
     new_tokens = []
     while x < len(tokens):
+        text_content = []
         text = ""
         url = ""
         
@@ -256,10 +257,11 @@ def merge_link_tokens(tokens, debug = None):
             new_tokens.append(tokens[x])
         elif tokens[x][0] == "OP_BR":
             if x > 0 and tokens[x - 1][0] != "EX_MARK" or x == 0:
+                op_br = x
                 while tokens[x][0] != "CL_BR" and x < len(tokens) - 1:
                     
-                    if debug != None:
-                        print(x, tokens[x])
+                    # if debug != None:
+                    #     print(x, tokens[x])
                     
 
                     if tokens[x][0] == "TEXT":
@@ -272,12 +274,14 @@ def merge_link_tokens(tokens, debug = None):
                     
                     if isinstance(tokens[x], TextNode):
                         if tokens[x].text_type == TextType.IMAGE:
-                            text += tokens[x].__repr__()
+                            if text != "":
+                                text_content.append(text)
+                            text_content.append(tokens[x])
+                            text = ""
                         else:
                             raise Exception(f"Unexpected behavior encountered!\n  Tokens: {tokens}\n  Current Token:{tokens[x]}\n  text:{text}\n  url:{url}\n  x:{x}\n")
                         x += 1
 
-        
                 # if debug != None:
                 #     print(text)
                 #     print(x)
@@ -285,42 +289,85 @@ def merge_link_tokens(tokens, debug = None):
 
                 if tokens[x][0] == "CL_BR" and tokens[x][1] > 1:
                     text += add_symbols(tokens[x])
+                    if len(text_content) != 0:
+                        text_content.append(text)
                 
                 if x == len(tokens):
                     break
 
                 x += 1
-                if isinstance(tokens[x], TextNode):
-                    y = x
-                    temp_list = []
-                    temp_list.insert(0, tokens[y])
-                    y -= 1
-                    while tokens[y][0] != "OP_BR":
-                        temp_list.insert(0, tokens[y])
-                        y -= 1
-                    temp_list.insert(0, tokens[y])
-                    new_tokens.extend(temp_list)
-                elif tokens[x][0] == "OP_PA":
-                    while tokens[x][0] != "CL_PA" and x < len(tokens):
-                        if tokens[x][0] == "TEXT":
-                            url += tokens[x][1]
-                        elif TokenSymbols[tokens[x][0]]:
-                            url += add_symbols(tokens[x])
-                        else:
-                            raise Exception(f"Unexpected behavior encountered!\n  Tokens: {tokens}\n  Current Token:{tokens[x]}\n  text:{text}\n  url:{url}\n  x:{x}\n")
-                        x += 1
+                if isinstance(tokens[x], tuple):
+                    if tokens[x][0] == "OP_PA":
+                        while tokens[x][0] != "CL_PA" and x < len(tokens):
+                            if tokens[x][0] == "TEXT":
+                                url += tokens[x][1]
+                            elif TokenSymbols[tokens[x][0]]:
+                                url += add_symbols(tokens[x])
+                            else:
+                                raise Exception(f"Unexpected behavior encountered!\n  Tokens: {tokens}\n  Current Token:{tokens[x]}\n  text:{text}\n  url:{url}\n  x:{x}\n")
+                            x += 1
 
-                    if tokens[x][0] == "CL_PA" and tokens[x][1] > 1:
-                        url += add_symbols(tokens[x])
-                    link_node = TextNode(text, TextType.LINK, url)
-                    new_tokens.append(link_node)
-                
+                        if tokens[x][0] == "CL_PA" and tokens[x][1] > 1:
+                            url += add_symbols(tokens[x])
+
+                        if len(text_content) != 0:
+                            link_node = ParentNode(tag = "a", children = [], props = url )
+                            assert link_node.children is not None
+                            
+                            # for the last pair of stars after an image. E.G.[**![image alt](image source)**](link url)
+                            if text != "": 
+                                text_content.append(text)
+                            
+                            for i in text_content:
+                                if isinstance(i, TextNode):
+                                    link_node.children.append(i)
+                                else:
+                                    temp_node = TextNode(i, TextType.TEXT, None)
+                                    link_node.children.append(temp_node)
+                        else:   
+                            link_node = TextNode(text, TextType.LINK, url)
+                        new_tokens.append(link_node)
+                    else:
+                        new_tokens.extend(tokens[op_br:x + 1])
                 else:
-                    new_tokens = tokens[:x + 1]
-                    # new_tokens.extend(tokens[:x + 1])
+                    new_tokens.extend(tokens[op_br:x + 1])
         else:
             new_tokens.append(tokens[x])
         x += 1
+    return new_tokens
+
+
+
+
+# Description: Merges 2 code tuples and everything in between them into code textnode
+# Parameters:
+# tokens -> list of tuple tokens
+# Return:
+# new_tokens -> list of tuple tokens with merged code textnodes. 
+def merge_code_tokens(tokens):
+    new_tokens = []
+
+    ptr1 = -1
+    ptr2 = -1
+    for i in range(0, len(tokens)):
+        token = tokens[i]
+        if token[0] == "CODE":
+            if ptr1 != -1:
+                text = ""
+                for x in range(ptr1 + 1, ptr2): # "ptr + 1" because ptr1 points to first code tuple
+                    tkn = tokens[x]
+                    if tkn[0] == "TEXT":
+                        text += tkn[1]
+                    else:
+                        text += add_symbols(tkn)
+                new_tokens.append(TextNode(text, TextType.CODE))
+                ptr1 = -1
+                ptr2 = -1
+            else:
+                ptr1 = i
+        else:
+            new_tokens.append(token)
+
     return new_tokens
 
 
@@ -330,9 +377,11 @@ def merge_link_tokens(tokens, debug = None):
 # node_tokens_list -> 1D list
 def AST(tokens):
 
-    tokens_with_image = merge_image_tokens(tokens)
+    tokens_with_code = merge_code_tokens(tokens)
+    tokens_with_image = merge_image_tokens(tokens_with_code)
     merged_link_token = merge_link_tokens(tokens_with_image)
-    #NOTE: Make sure to handle the image inside link text like this [![image](image source)](link url)
+
+
 
     return merged_link_token
 
