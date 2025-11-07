@@ -1,4 +1,4 @@
-from htmlnode import HTMLNode, ParentNode, LeafNode
+from htmlnode import ParentNode, LeafNode
 from textnode import TextNode, TextType, text_node_to_html_node
 from block_logic import BlockType, markdown_to_blocks, block_to_block_type
 from enum import Enum
@@ -142,6 +142,10 @@ def tokenizer(line):
 
 
 def add_symbols(token):
+    
+    if token[1] == "!":
+        return "!"
+    
     token_string = ""
     symbol = TokenSymbols[token[0]]
     
@@ -150,9 +154,6 @@ def add_symbols(token):
         diff += 1
     x = 0
     
-    if token[1] == "!":
-        return "!"
-
     while x < (token[1] - diff):
         token_string += symbol.value
         x += 1
@@ -336,7 +337,38 @@ def merge_link_tokens(tokens, debug = None):
         x += 1
     return new_tokens
 
+def unnest_code_tokens(tokens):
+    new_list = []
 
+    for x in range(0, len(tokens)):
+        if tokens[x][0] == "CODE" and tokens[x][1] > 1:
+            for x in range(0, (tokens[x][1] - 1)):
+                new_list.append(("CODE", 1))
+
+
+#NOTE: is code[1] > 1, add a textnode automatically using while loop because it is easier
+def inline_nested_code_check(tokens):
+    
+    merged_tokens = []
+    x = 0
+    while x < len(tokens):
+        if isinstance(tokens[x], TextNode):
+            if tokens[x].text_type == TextType.CODE and tokens[x].text == "":
+                x += 1
+                text = ""
+
+                while isinstance(tokens[x], TextNode) == False:
+                    if tokens[x][0] == "TEXT":
+                        text += tokens[x][1]
+                    else:
+                        text += add_symbols(tokens[x])
+                    x += 1
+                    
+
+
+        else:
+           merged_tokens.append(tokens[x])
+        x += 1
 
 
 # Description: Merges 2 code tuples and everything in between them into code textnode
@@ -347,43 +379,145 @@ def merge_link_tokens(tokens, debug = None):
 def merge_code_tokens(tokens):
     new_tokens = []
 
-    ptr1 = -1
-    ptr2 = -1
-    for i in range(0, len(tokens)):
-        token = tokens[i]
-        if token[0] == "CODE":
-            if ptr1 != -1:
-                text = ""
-                for x in range(ptr1 + 1, ptr2): # "ptr + 1" because ptr1 points to first code tuple
-                    tkn = tokens[x]
-                    if tkn[0] == "TEXT":
-                        text += tkn[1]
-                    else:
-                        text += add_symbols(tkn)
-                new_tokens.append(TextNode(text, TextType.CODE))
-                ptr1 = -1
-                ptr2 = -1
-            else:
-                ptr1 = i
-        else:
-            new_tokens.append(token)
+    x = 0
+    while x < len(tokens):
 
+        if isinstance(tokens[x], tuple) == 1:
+            if tokens[x][0] == "CODE":
+                code_text = ""
+                code_start = x
+                code_tuple_count = 1
+                start_code_value = tokens[x][1]
+                x += 1
+                print(f"while loop start: {code_start}")
+
+                # loop can end in 2 conditions:
+                # 1: same value code tuple found
+                # 2: end of the list came
+
+                while x < (len(tokens) - 1):
+                    # If tokens[x] is a CODE tuple
+                    if tokens[x][0] == "CODE":
+                        code_tuple_count += 1
+                        if tokens[x][1] == start_code_value:
+                            break
+                        else:
+                            code_text += add_symbols(tokens[x])
+                    elif tokens[x][0] == "TEXT":
+                        code_text += tokens[x][1]
+                    else:
+                        code_text += add_symbols(tokens[x])
+                    x += 1
+                
+                print(f"x value after first while loop: {x}")
+                print(f"code tuples found: {code_tuple_count}")
+                # ` `               -> valid(TextNode(" ", Code))
+                # `` ` ``           -> valid(TextNode(" ` ", Code))  
+                # ``` `` ```        -> valid(TextNode(" `` ", Code))
+                # ``` ``            -> invalid 
+                # ``` ``foo`` ```   -> valid(TextNode(" ``foo`` ", Code))
+                # ```foo```         -> valid(TextNode("foo", Code))
+                # ``` foo ```!`     -> valid
+
+                print(f"current x value: {x}")
+                code_node = None
+                if x == (len(tokens) - 1):
+                    print("End of the tuple list")
+                    if tokens[x][0] == "CODE":
+                        if tokens[x][1] == start_code_value:
+                            code_node = TextNode(code_text, TextType.CODE)
+                        elif code_tuple_count > 2:
+                            new_tokens.append(tokens[code_start])
+                            x = code_start
+                        else:
+                            new_tokens.extend(tokens[code_start:])
+                    elif code_tuple_count > 2:
+                        new_tokens.append(tokens[code_start])
+                        x = code_start
+                    else:
+                        new_tokens.extend(tokens[code_start:])
+                elif tokens[x][0] == "CODE" and tokens[x][1] == start_code_value:
+                    print("Same value code tuple found")
+                    code_node = TextNode(code_text, TextType.CODE)
+                else:
+                    raise Exception(f"Unexpected behavior encountered!\n  Tokens: {tokens}\n  Current Token:{tokens[x]}\n  Current Code Text:{code_text}\n  Code Start:{code_start}\n  x:{x}\n")
+                
+                if isinstance(code_node, TextNode):
+                    new_tokens.append(code_node)
+                
+                # if tokens[x][1] > 1:
+                #     token_value = tokens[x][1]
+                #     tokens[x] = ("CODE", token_value - 1)
+                #This is a line with `valid code```code``` in it!
+            else:
+                print(f"non code token appended: {tokens[x]}")
+                new_tokens.append(tokens[x])
+        print(f"Current token: {tokens[x]}, x value: {x}")
+        x += 1
     return new_tokens
 
+
+
+    # while x < len(tokens):
+    #     text = ""
+    #     code_start = 0
+    #     
+    #     if tokens[x][0] == "CODE" and tokens[x][1] == 1:
+    #         code_start = x
+    #         x += 1
+    #         if x != len(tokens):
+    #             while tokens[x][0] != "CODE" and x < len(tokens) - 1:
+    #                 if tokens[x][0] == "TEXT":
+    #                     text += tokens[x][1]
+    #                 else:
+    #                     text += add_symbols(tokens[x])
+    #                 x += 1
+    #             print(f"text:{text}")
+    #             if x + 1 == len(tokens) and tokens[x][0] == "CODE":
+    #                 new_tokens.append(TextNode(text, TextType.CODE))
+    #                 break
+    #             elif x + 1 != len(tokens) and tokens[x][0] == "CODE":
+    #                 new_tokens.append(TextNode(text, TextType.CODE))
+    #             else:
+    #                 new_tokens.extend(tokens[code_start:x])
+    #   
+    #             if tokens[x][1] > 1:
+    #                 token = (tokens[x][0], tokens[x][1] - 1)
+    #                 new_tokens.append(token)
+    #         else:
+    #             new_tokens.append(tokens[x - 1])
+    #             break
+    #     elif tokens[x][0] == "CODE" and tokens[x][1] > 1:
+    #         print("here")
+    #         token_num = tokens[x][1]
+    #         
+    #         while token_num >= 2:
+    #             token_num -= 2
+    #             new_tokens.append(TextNode("", TextType.CODE))
+    #         
+    #         if token_num == 1:
+    #             new_tokens.append(("CODE", 1))
+    #         print(f"new tokens {new_tokens}")
+    #     else:
+    #         new_tokens.append(tokens[x])
+    #     x += 1
+    # print(f"1st function:{new_tokens}")
+    # return inline_nested_code_check(new_tokens)
 
 # CURRENT Path
 # Markdown -> markdown_to_html -> markdown_to_block -> text_to_textnode
 #NOTE: AST will turn tokens into textnodes
 # node_tokens_list -> 1D list
+# It will recieve tokens from tokenizers to process them further!
 def AST(tokens):
 
-    tokens_with_code = merge_code_tokens(tokens)
-    tokens_with_image = merge_image_tokens(tokens_with_code)
-    merged_link_token = merge_link_tokens(tokens_with_image)
+    merged_code_tokens = merge_code_tokens(tokens)
+    merged_image_tokens = merge_image_tokens(merged_code_tokens)
+    merged_link_tokens = merge_link_tokens(merged_image_tokens)
 
 
 
-    return merged_link_token
+    return merged_link_tokens 
 
 
 

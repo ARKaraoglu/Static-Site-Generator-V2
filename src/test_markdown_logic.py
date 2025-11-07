@@ -1,7 +1,7 @@
 import unittest
 from textnode import TextNode, TextType
 from htmlnode import ParentNode, LeafNode
-from markdown_logic import merge_link_tokens, tokenizer, TokenSymbols, add_symbols, merge_image_tokens, AST, split_nodes_delimiter, extract_markdown_images, extract_markdown_links, split_nodes_image, split_nodes_link, text_to_textnode, markdown_to_html
+from markdown_logic import merge_code_tokens, merge_link_tokens, tokenizer, TokenSymbols, add_symbols, merge_image_tokens, AST, split_nodes_delimiter, extract_markdown_images, extract_markdown_links, split_nodes_image, split_nodes_link, text_to_textnode, markdown_to_html
 
 class TestTokenizer(unittest.TestCase):
     def test_tokenizer_text(self):
@@ -386,10 +386,6 @@ class TestMergeLinkTokens(unittest.TestCase):
         tokens = tokenizer(line)
         new_tokens = merge_link_tokens(tokens, True)
         self.assertEqual(new_tokens, [(TextNode("[link text]", TextType.LINK, "()")),("TEXT", "This line has more "),(TextNode("text", TextType.LINK, "link")),("TEXT", " than 1 link in it"),("EX_MARK", "!"), ("TEXT", " "),(TextNode("**link text**", TextType.LINK, "https://url"))])
-    # print(f"line:{line}\n")
-    # print(f"tokens:{tokens}\n")
-    # print(f"new_tokens:{new_tokens}\n")
-    # print(f"new_tokens2{new_tokens2}\n")
 
     def test_merge_link_tokens_with_image_node(self):
         line = "[text] (url)This line has [****]![image alt](**image source**) image [link text](link url) node in it!"
@@ -413,7 +409,181 @@ class TestMergeLinkTokens(unittest.TestCase):
         self.assertEqual(new_tokens2,[("TEXT", "There is a link with image "),ParentNode("a", [TextNode("**", TextType.TEXT),TextNode("image alt", TextType.IMAGE, "image source"), TextNode("**", TextType.TEXT) ], "link url"),("TEXT", " as link text in this line")])
 
 class TestMergeCodeTokens(unittest.TestCase):
-    pass
+    def test_merge_code_tokens_valid1(self):
+        line = "This is a line with `code` in it!"
+        tokens = tokenizer(line)
+        new_tokens = merge_code_tokens(tokens)
+        self.assertEqual(new_tokens, [("TEXT", "This is a line with "),(TextNode("code", TextType.CODE)),("TEXT", " in it"), ("EX_MARK", "!")])
+
+    def test_merge_code_tokens_valid2(self):
+        line = "This is a line with `**code**` in it!`This is the second Code`"
+        tokens = tokenizer(line)
+        new_tokens = merge_code_tokens(tokens)
+        self.assertEqual(new_tokens, [("TEXT", "This is a line with "), (TextNode("**code**", TextType.CODE)),("TEXT", " in it"), ("EX_MARK", "!"), (TextNode("This is the second Code", TextType.CODE))])
+
+    def test_merge_code_tokens_valid3(self):
+        line = "This is a line with ``code text`` in it!"
+        tokens = tokenizer(line)
+        new_tokens = merge_code_tokens(tokens)
+        self.assertEqual(new_tokens, [("TEXT", "This is a line with "), (TextNode("code text", TextType.CODE)), ("TEXT", " in it"), ("EX_MARK", "!")])
+
+    def test_merge_code_tokens_valid4(self):
+        line = "This is a line with ````code text```` in it!"
+        tokens = tokenizer(line)
+        new_tokens = merge_code_tokens(tokens)
+        self.assertEqual(new_tokens, [("TEXT", "This is a line with "), (TextNode("code text", TextType.CODE)), ("TEXT", " in it"), ("EX_MARK", "!")])
+
+    def test_merge_code_tokens_valid5(self):
+        line = "This is a line with ``code ` text`` in it!"
+        tokens = tokenizer(line)
+        new_tokens = merge_code_tokens(tokens)
+        self.assertEqual(new_tokens, [("TEXT", "This is a line with "), (TextNode("code ` text", TextType.CODE)), ("TEXT", " in it"), ("EX_MARK", "!")])
+
+    def test_merge_code_tokens_valid6(self):
+        line = "This is a line with ```code `` text``` in it!"
+        tokens = tokenizer(line)
+        new_tokens = merge_code_tokens(tokens)
+        self.assertEqual(new_tokens, [("TEXT", "This is a line with "), (TextNode("code `` text", TextType.CODE)), ("TEXT", " in it"), ("EX_MARK", "!")])
+
+    def test_merge_code_tokens_valid7(self):
+        line = "This is a line with ```code `` foo `` text``` in it!"
+        tokens = tokenizer(line)
+        new_tokens = merge_code_tokens(tokens)
+        self.assertEqual(new_tokens, [("TEXT", "This is a line with "), (TextNode("code `` foo `` text", TextType.CODE)), ("TEXT", " in it"), ("EX_MARK", "!")])
+
+    def test_merge_code_tokens_valid8(self):
+        line = "This is a line with ```code text``` in it!"
+        tokens = tokenizer(line)
+        new_tokens = merge_code_tokens(tokens)
+        self.assertEqual(new_tokens, [("TEXT", "This is a line with "), (TextNode("code text", TextType.CODE)), ("TEXT", " in it"), ("EX_MARK", "!")])
+
+    def test_merge_code_tokens_valid9(self):
+        line = "This is a line with ````code `foo` text```` in it!"
+        tokens = tokenizer(line)
+        new_tokens = merge_code_tokens(tokens)
+        self.assertEqual(new_tokens, [("TEXT", "This is a line with "), (TextNode("code `foo` text", TextType.CODE)), ("TEXT", " in it"), ("EX_MARK", "!")])
+
+    def test_merge_code_tokens_valid10(self):
+        line = "This is a line with ````````code `foo` text```````` in it!"
+        tokens = tokenizer(line)
+        new_tokens = merge_code_tokens(tokens)
+        self.assertEqual(new_tokens, [("TEXT", "This is a line with "), (TextNode("code `foo` text", TextType.CODE)), ("TEXT", " in it"), ("EX_MARK", "!")])
+
+    def test_merge_code_tokens_valid11(self):
+        line = "This is a line with `valid code```code``` in it!"
+        tokens = tokenizer(line)
+        new_tokens = merge_code_tokens(tokens)
+        self.assertEqual(new_tokens, [
+            ("TEXT", "This is a line with "),
+            ("CODE", 1), 
+            ("TEXT", "valid code"),
+            (TextNode("code", TextType.CODE)), 
+            ("TEXT", " in it"), 
+            ("EX_MARK", "!")
+        ])
+
+    def test_merge_code_tokens_valid12(self):
+        line = "This is a line with ```valid code`code` in it!"
+        tokens = tokenizer(line)
+        new_tokens = merge_code_tokens(tokens)
+        self.assertEqual(new_tokens, [
+            ("TEXT", "This is a line with "),
+            ("CODE", 3), 
+            ("TEXT", "valid code"),
+            (TextNode("code", TextType.CODE)), 
+            ("TEXT", " in it"), 
+            ("EX_MARK", "!")
+        ])
+
+    def test_merge_code_tokens_valid13(self):
+        line = "This is a line with ```valid code`code` ``in it!"
+        tokens = tokenizer(line)
+        new_tokens = merge_code_tokens(tokens)
+        self.assertEqual(new_tokens, [
+            ("TEXT", "This is a line with "),
+            ("CODE", 3), 
+            ("TEXT", "valid code"),
+            (TextNode("code", TextType.CODE)), 
+            ("TEXT", " "),
+            ("CODE", 2),
+            ("TEXT", "in it"), 
+            ("EX_MARK", "!")
+        ])
+
+    def test_merge_code_tokens_valid14(self):
+        line = "This is a line with ```valid ``code`code` `` ``in it!"
+        tokens = tokenizer(line)
+        new_tokens = merge_code_tokens(tokens)
+        self.assertEqual(new_tokens, [
+            ("TEXT", "This is a line with "),
+            ("CODE", 3), 
+            ("TEXT", "valid "),
+            (TextNode("code`code` ", TextType.CODE)), 
+            ("TEXT", " "),
+            ("CODE", 2),
+            ("TEXT", "in it"), 
+            ("EX_MARK", "!")
+        ])
+
+
+    def test_merge_code_tokens_valid16(self):
+        line = "This is a line with `` ``` `` in it!"
+        tokens = tokenizer(line)
+        new_tokens = merge_code_tokens(tokens)
+        self.assertEqual(new_tokens, [("TEXT", "This is a line with "),(TextNode(" ``` ", TextType.CODE)),("TEXT", " in it"),("EX_MARK", "!")])
+    
+    def test_merge_code_tokens_invalid1(self):
+        line = "This is a line with `** _+code+_ **`` in it!"
+        tokens = tokenizer(line)
+        new_tokens = merge_code_tokens(tokens)
+        self.assertEqual(new_tokens, tokens)
+
+    def test_merge_code_tokens_invalid2(self):
+        line = "This is a line with ``**code**` in it!"
+        tokens = tokenizer(line)
+        new_tokens = merge_code_tokens(tokens)
+        self.assertEqual(new_tokens, tokens)
+
+    def test_merge_code_tokens_invalid3(self):
+        line = "This is a line `````with ````a ```lot ``of `backticks in it!"
+        tokens = tokenizer(line)
+        new_tokens = merge_code_tokens(tokens)
+        self.assertEqual(new_tokens, [
+            ("TEXT", "This is a line "),
+            ("CODE", 5),
+            ("TEXT", "with "),
+            ("CODE", 4),
+            ("TEXT", "a "),
+            ("CODE", 3),
+            ("TEXT", "lot "),
+            ("CODE", 2),
+            ("TEXT", "of "),
+            ("CODE", 1),
+            ("TEXT", "backticks in it"),
+            ("EX_MARK", "!")
+        ])
+    
+    def test_merge_code_tokens_invalid4(self):
+        line = "This is a line `with ``a ```lot ````of `````backticks in it!"
+        tokens = tokenizer(line)
+        new_tokens = merge_code_tokens(tokens)
+        self.assertEqual(new_tokens, [
+            ("TEXT", "This is a line "),
+            ("CODE", 1),
+            ("TEXT", "with "),
+            ("CODE", 2),
+            ("TEXT", "a "),
+            ("CODE", 3),
+            ("TEXT", "lot "),
+            ("CODE", 4),
+            ("TEXT", "of "),
+            ("CODE", 5),
+            ("TEXT", "backticks in it"),
+            ("EX_MARK", "!")
+        ])
+
+
+
 
 class TestSplitDelimiter(unittest.TestCase):
     def test_split_nodes_delimiter_1_child(self):
