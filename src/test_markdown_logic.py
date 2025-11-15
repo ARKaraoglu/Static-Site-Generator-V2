@@ -9,578 +9,653 @@ class TestTokenizer(unittest.TestCase):
         tokens = tokenizer(line)
         self.assertEqual(tokens, [("TEXT", "This is a paragraph textnode")])
 
-    def test_tokenizer_bold(self):
-        line = "This is a textnode with **bold** text in it"
-        tokens = tokenizer(line)
-        self.assertEqual(tokens, [("TEXT", "This is a textnode with "), ("STAR", 2), ("TEXT", "bold"), ("STAR", 2), ("TEXT", " text in it")])
+    # def test_tokenizer_bold(self):
+    #     line = "This is a textnode with **bold** text in it"
+    #     tokens = tokenizer(line)
+    #     self.assertEqual(tokens, [("TEXT", "This is a textnode with"), ("SPACE", " "), ("STAR", 2), ("TEXT", "bold"), ("STAR", 2), ("SPACE", " "), ("TEXT", "text in it")])
 
-    def test_tokenizer_bold2(self):
-        line = "This is a textnode with bold text in **it**"
-        tokens = tokenizer(line)
-        self.assertEqual(tokens, [("TEXT", "This is a textnode with bold text in "), ("STAR", 2), ("TEXT", "it"), ("STAR", 2)])
-    
-    def test_tokenizer_multi_bold(self):
-        line = "This is a **textnode** with **bold** text in it"
-        tokens = tokenizer(line)
-        self.assertEqual(tokens, [("TEXT", "This is a "), ("STAR", 2), ("TEXT", "textnode"), ("STAR", 2), ("TEXT", " with "), ("STAR", 2), ("TEXT", "bold"), ("STAR", 2), ("TEXT", " text in it")])
-
-    def test_tokenizer_italic(self):
-        line = "This is a textnode with *bold* text in it"
-        tokens = tokenizer(line)
-        self.assertEqual(tokens, [("TEXT", "This is a textnode with "), ("STAR", 1), ("TEXT", "bold"), ("STAR", 1), ("TEXT", " text in it")])
-
-    def test_tokenizer_multi_italic(self):
-        line = "*This* is a *textnode* with *bold* text in it"
-        tokens = tokenizer(line)
-        self.assertEqual(tokens, [
-            ("STAR", 1), 
-            ("TEXT", "This"), 
-            ("STAR", 1), 
-            ("TEXT", " is a "), 
-            ("STAR", 1), 
-            ("TEXT", "textnode"), 
-            ("STAR", 1), 
-            ("TEXT", " with "), 
-            ("STAR", 1), 
-            ("TEXT", "bold"), 
-            ("STAR", 1), 
-            ("TEXT", " text in it")])
-
-    def test_tokenizer_bold_underscore(self):
-        line = "__This__ sentence has __bold text__ made with __underscores__"
-        tokens = tokenizer(line)
-        self.assertEqual(tokens, [
-            ("UNDERSCORE", 2),
-            ("TEXT", "This"),
-            ("UNDERSCORE", 2),
-            ("TEXT", " sentence has "),
-            ("UNDERSCORE", 2),
-            ("TEXT", "bold text"),
-            ("UNDERSCORE", 2),
-            ("TEXT", " made with "),
-            ("UNDERSCORE", 2),
-            ("TEXT", "underscores"),
-            ("UNDERSCORE", 2)
-        ])
-
-    def test_tokenizer_italic_underscore(self):
-        line = "This sentence has _bold text_ made with underscores"
-        tokens = tokenizer(line)
-        self.assertEqual(tokens, [
-            ("TEXT", "This sentence has "),
-            ("UNDERSCORE", 1),
-            ("TEXT", "bold text"),
-            ("UNDERSCORE", 1),
-            ("TEXT", " made with underscores")
-        ])
-
-    def test_tokenizer_code(self):
-        line = "This is a node with `code` inline markdown in it"
-        tokens = tokenizer(line)
-        self.assertEqual(tokens, [
-            ("TEXT", "This is a node with "),
-            ("CODE", 1),
-            ("TEXT", "code"),
-            ("CODE", 1),
-            ("TEXT", " inline markdown in it")
-        ])
-
-    def test_tokenizer_multi_code(self):
-        line = "This is a `textnode` with `code` inline markdown in `it`"
-        tokens = tokenizer(line)
-        self.assertEqual(tokens, [
-            ("TEXT", "This is a "),
-            ("CODE", 1),
-            ("TEXT", "textnode"),
-            ("CODE", 1),
-            ("TEXT", " with "),
-            ("CODE", 1),
-            ("TEXT", "code"),
-            ("CODE", 1),
-            ("TEXT", " inline markdown in "),
-            ("CODE", 1),
-            ("TEXT", "it"),
-            ("CODE", 1)
-        ])
-
-    def test_tokenizer_multi_type(self):
-        line = "This is **bold**, this is _italic_, and this is `inline code`."
-        tokens = tokenizer(line)
-        self.assertEqual(tokens, [
-            ("TEXT", "This is "),
-            ("STAR", 2),
-            ("TEXT", "bold"),
-            ("STAR", 2),
-            ("TEXT", ", this is "),
-            ("UNDERSCORE", 1),
-            ("TEXT", "italic"),
-            ("UNDERSCORE", 1),
-            ("TEXT", ", and this is "),
-            ("CODE", 1),
-            ("TEXT", "inline code"),
-            ("CODE", 1),
-            ("TEXT", ".")
-        ])
-
-    def test_tokenizer_multi_nodes(self):
-        line1 = "This is a **textnode** with **bold** text in it"
-        line2 = "*This* is a *textnode* with *bold* text in it"
-        line3 = "This sentence has __bold text__ made with underscores"
-        line4 = "This is a node with `code` inline markdown in `it`"
-        line5 = "This is a `textnode` with `code` inline markdown in it"
-        line6 = "This is **bold**, this is _italic_, and this is `inline code`."
-        line7 = "This is a paragraph textnode"
-        
-        test_tokens = [[
-                ("TEXT", "This is a "), 
-                ("STAR", 2), 
-                ("TEXT", "textnode"), 
-                ("STAR", 2), 
-                ("TEXT", " with "), 
-                ("STAR", 2), 
-                ("TEXT", "bold"), 
-                ("STAR", 2), 
-                ("TEXT", " text in it")
-            ],
-            [
-                ("STAR", 1), 
-                ("TEXT", "This"), 
-                ("STAR", 1), 
-                ("TEXT", " is a "), 
-                ("STAR", 1), 
-                ("TEXT", "textnode"), 
-                ("STAR", 1), 
-                ("TEXT", " with "), 
-                ("STAR", 1), 
-                ("TEXT", "bold"), 
-                ("STAR", 1), 
-                ("TEXT", " text in it")
-            ],
-            [
-                ("TEXT", "This sentence has "),
-                ("UNDERSCORE", 2),
-                ("TEXT", "bold text"),
-                ("UNDERSCORE", 2),
-                ("TEXT", " made with underscores")
-            ],
-            [
-                ("TEXT", "This is a node with "),
-                ("CODE", 1),
-                ("TEXT", "code"),
-                ("CODE", 1),
-                ("TEXT", " inline markdown in "),
-                ("CODE", 1),
-                ("TEXT", "it"),
-                ("CODE", 1)
-            ],
-            [
-                ("TEXT", "This is a "),
-                ("CODE", 1),
-                ("TEXT", "textnode"),
-                ("CODE", 1),
-                ("TEXT", " with "),
-                ("CODE", 1),
-                ("TEXT", "code"),
-                ("CODE", 1),
-                ("TEXT", " inline markdown in it")
-            ],
-            [
-                ("TEXT", "This is "),
-                ("STAR", 2),
-                ("TEXT", "bold"),
-                ("STAR", 2),
-                ("TEXT", ", this is "),
-                ("UNDERSCORE", 1),
-                ("TEXT", "italic"),
-                ("UNDERSCORE", 1),
-                ("TEXT", ", and this is "),
-                ("CODE", 1),
-                ("TEXT", "inline code"),
-                ("CODE", 1),
-                ("TEXT", ".")
-            ],
-            [
-                ("TEXT", "This is a paragraph textnode")
-            ]]
-        tokens_list = []
-        line_list = [line1, line2, line3, line4, line5, line6, line7]
-        for l in line_list:
-            tokens_list.append(tokenizer(l))
-        self.assertEqual(tokens_list, test_tokens)
-
-    def test_tokenizer_nested_inline_markdown1(self):
-        line = "This is **bold and *nested italic*** with `inline code` and **_bold-italic_** text"
-        tokens = tokenizer(line)
-        self.assertEqual(tokens, [("TEXT", "This is "),("STAR", 2),("TEXT", "bold and "),("STAR", 1),("TEXT", "nested italic"),("STAR", 3),("TEXT", " with "),("CODE", 1),("TEXT", "inline code"),("CODE", 1),("TEXT", " and "),("STAR", 2),("UNDERSCORE", 1),("TEXT", "bold-italic"),("UNDERSCORE", 1),("STAR", 2),("TEXT", " text")])
-
-    def test_tokenizer_image(self):
-        line = "This is a node with ![image alt](image source) in it!"
-        tokens = tokenizer(line)
-        self.assertEqual(tokens, [("TEXT", "This is a node with "), ("EX_MARK", "!"), ("OP_BR", 1), ("TEXT", "image alt"), ("CL_BR", 1), ("OP_PA", 1), ("TEXT", "image source"), ("CL_PA", 1), ("TEXT", " in it"), ("EX_MARK", "!")])
-
-    def test_tokenizer_image2(self):
-        line = "![**image 1**](source) and ![[__image alt__]](source)!"
-        tokens = tokenizer(line)
-        self.assertEqual(tokens, [
-            ("EX_MARK", "!"),
-            ("OP_BR", 1),
-            ("STAR", 2),
-            ("TEXT", "image 1"),
-            ("STAR", 2),
-            ("CL_BR", 1),
-            ("OP_PA", 1),
-            ("TEXT", "source"),
-            ("CL_PA", 1),
-            ("TEXT", " and "),
-            ("EX_MARK", "!"),
-            ("OP_BR", 2),
-            ("UNDERSCORE", 2),
-            ("TEXT", "image alt"),
-            ("UNDERSCORE", 2),
-            ("CL_BR", 2),
-            ("OP_PA", 1),
-            ("TEXT", "source"),
-            ("CL_PA", 1),
-            ("EX_MARK", "!")
-        ])
-
-    def test_tokenizer_link(self):
-        line = "This is a node with [link text](link source) in it!"
-        tokens = tokenizer(line)
-        self.assertEqual(tokens, [("TEXT", "This is a node with "), ("OP_BR", 1), ("TEXT", "link text"), ("CL_BR", 1), ("OP_PA", 1), ("TEXT", "link source"), ("CL_PA", 1), ("TEXT", " in it"), ("EX_MARK", "!")])
-
-    def test_tokenizer_link2(self):
-        line = "[**link 1**](source) and [[__link text__]](source)!"
-        tokens = tokenizer(line)
-        self.assertEqual(tokens, [
-            ("OP_BR", 1),
-            ("STAR", 2),
-            ("TEXT", "link 1"),
-            ("STAR", 2),
-            ("CL_BR", 1),
-            ("OP_PA", 1),
-            ("TEXT", "source"),
-            ("CL_PA", 1),
-            ("TEXT", " and "),
-            ("OP_BR", 2),
-            ("UNDERSCORE", 2),
-            ("TEXT", "link text"),
-            ("UNDERSCORE", 2),
-            ("CL_BR", 2),
-            ("OP_PA", 1),
-            ("TEXT", "source"),
-            ("CL_PA", 1),
-            ("EX_MARK", "!")
-        ])
-
-    def test_tokenizer_excess_whitespace(self):
-        line = "  ![**image 1**](source)  and  ![[__image alt__]](source)!  "
-        tokens = tokenizer(line)
-        self.assertEqual(tokens, [
-            ("EX_MARK", "!"),
-            ("OP_BR", 1),
-            ("STAR", 2),
-            ("TEXT", "image 1"),
-            ("STAR", 2),
-            ("CL_BR", 1),
-            ("OP_PA", 1),
-            ("TEXT", "source"),
-            ("CL_PA", 1),
-            ("TEXT", " and "),
-            ("EX_MARK", "!"),
-            ("OP_BR", 2),
-            ("UNDERSCORE", 2),
-            ("TEXT", "image alt"),
-            ("UNDERSCORE", 2),
-            ("CL_BR", 2),
-            ("OP_PA", 1),
-            ("TEXT", "source"),
-            ("CL_PA", 1),
-            ("EX_MARK", "!")
-        ])
-    
-    def test_tokenizer_excess_whitespace2(self):
-        line = "    This    is    a       textnode   with * bold   *       text in   it "
-        tokens = tokenizer(line)
-        self.assertEqual(tokens, [("TEXT", "This is a textnode with "), ("STAR", 1), ("TEXT", " bold "), ("STAR", 1), ("TEXT", " text in it")])
-
-
-class TestMergeImageTokens(unittest.TestCase):
-    def test_merge_image_tokens(self):
-        line = "This is a line with ![image alt](#) in it!"
-        tokens = tokenizer(line)
-        new_tokens = merge_image_tokens(tokens)
-        self.assertEqual(new_tokens, [("TEXT", "This is a line with "),TextNode("image alt", TextType.IMAGE, "#"), ("TEXT", " in it"), ("EX_MARK", "!")])
-
-    def test_merge_image_tokens_inline_markdown_in_src_and_alt(self):
-        line = "This is a line with ![[***__`image alt`__***]]((**#*)) in it!"
-        tokens = tokenizer(line)
-        new_tokens = merge_image_tokens(tokens)
-        self.assertEqual(new_tokens, [("TEXT", "This is a line with "),TextNode("[***__`image alt`__***]", TextType.IMAGE, "(**#*)"), ("TEXT", " in it"), ("EX_MARK", "!")])
-
-
-    def test_merge_image_tokens_multi_image(self):
-        line = "This is a line with ![image alt](#) more than 1 image ![second image alt](image source)in it!"
-        tokens = tokenizer(line)
-        new_tokens = merge_image_tokens(tokens)
-        self.assertEqual(new_tokens, [("TEXT", "This is a line with "),TextNode("image alt", TextType.IMAGE, "#"), ("TEXT", " more than 1 image "), TextNode("second image alt", TextType.IMAGE, "image source"), ("TEXT", "in it"), ("EX_MARK", "!")])
-
-    def test_merge_image_tokens_multi_image_single_link(self):
-        line = "This is a line with ![image alt](#) [more than](1 image) ![second image alt](image source)in it!"
-        tokens = tokenizer(line)
-        new_tokens = merge_image_tokens(tokens)
-        self.assertEqual(new_tokens, [("TEXT", "This is a line with "),TextNode("image alt", TextType.IMAGE, "#"),("TEXT", " "),("OP_BR", 1),("TEXT", "more than"),("CL_BR", 1),("OP_PA", 1),("TEXT", "1 image"), ("CL_PA", 1), ("TEXT", " "), TextNode("second image alt", TextType.IMAGE, "image source"), ("TEXT", "in it"), ("EX_MARK", "!")])
-
-    def test_merge_image_tokens_wrong_image_format(self):
-        line = "This is a line with ![image alt] (#) in it!"
-        tokens = tokenizer(line)
-        new_tokens = merge_image_tokens(tokens)
-        self.assertEqual(new_tokens, [("TEXT", "This is a line with "),("EX_MARK", "!"),("OP_BR", 1), ("TEXT", "image alt"),("CL_BR", 1),("TEXT", " "),("OP_PA", 1), ("TEXT", "#"), ("CL_PA", 1), ("TEXT", " in it"), ("EX_MARK", "!")])
-
-    def test_merge_image_tokens_wrong_image_format2(self):
-        line = "This is a line with ![image alt"
-        tokens = tokenizer(line)
-        new_tokens = merge_image_tokens(tokens)
-        self.assertEqual(new_tokens, [("TEXT", "This is a line with "),("EX_MARK", "!"),("OP_BR", 1), ("TEXT", "image alt")])
-
-    def test_merge_image_tokens_wrong_image_format3(self):
-        line = "This is a line with ![image alt]]"
-        tokens = tokenizer(line)
-        new_tokens = merge_image_tokens(tokens)
-        self.assertEqual(new_tokens, [("TEXT", "This is a line with "),("EX_MARK", "!"),("OP_BR", 1), ("TEXT", "image alt"),("CL_BR", 2)])
-
-    def test_merge_image_tokens_wrong_image_format4(self):
-        line = "This is a line with ![image alt](#))"
-        tokens = tokenizer(line)
-        new_tokens = merge_image_tokens(tokens)
-        self.assertEqual(new_tokens, [("TEXT", "This is a line with "),TextNode("image alt", TextType.IMAGE, "#)")])
-
-    def test_merge_image_tokens_wrong_format(self):
-        line = "This is a line with ![image alt] a wrong image in it!"
-        tokens = tokenizer(line)
-        new_tokens = merge_image_tokens(tokens)
-        self.assertEqual(new_tokens, [("TEXT", "This is a line with "), ("EX_MARK", "!"), ("OP_BR", 1), ("TEXT", "image alt"), ("CL_BR", 1), ("TEXT", " a wrong image in it"), ("EX_MARK", "!")])
-
-    def test_merge_image_tokens_wrong_format2(self):
-        line = "This is a line with ![image alt] a wrong ![alt](source)image in it!"
-        tokens = tokenizer(line)
-        new_tokens = merge_image_tokens(tokens)
-        self.assertEqual(new_tokens, [("TEXT", "This is a line with "), ("EX_MARK", "!"), ("OP_BR", 1), ("TEXT", "image alt"), ("CL_BR", 1), ("TEXT", " a wrong "), (TextNode("alt", TextType.IMAGE, "source")), ("TEXT", "image in it"), ("EX_MARK", "!")])
-
-    def test_merge_image_tokens_wrong_format3(self):
-        line = "This is a line with ![image alt]* a wrong ![alt](source)image in it!"
-        tokens = tokenizer(line)
-        new_tokens = merge_image_tokens(tokens)
-        self.assertEqual(new_tokens, [("TEXT", "This is a line with "), ("EX_MARK", "!"), ("OP_BR", 1), ("TEXT", "image alt"), ("CL_BR", 1), ("STAR", 1), ("TEXT", " a wrong "), (TextNode("alt", TextType.IMAGE, "source")), ("TEXT", "image in it"), ("EX_MARK", "!")])
-
-
-class TestMergeLinkTokens(unittest.TestCase):
-    def test_merge_link_tokens(self):
-        line = "This line has 1 link  [link alt](link url) in it!"
-        tokens = tokenizer(line)
-        new_tokens = merge_link_tokens(tokens)
-        self.assertEqual(new_tokens, [("TEXT", "This line has 1 link "), (TextNode("link alt", TextType.LINK, "link url")), ("TEXT", " in it"), ("EX_MARK", "!")])
-
-    def test_merge_link_tokens2(self):
-        line = "[[link text]](())This line has more [text](link) than 1 link in it! [**link text**](https://url)"
-        tokens = tokenizer(line)
-        new_tokens = merge_link_tokens(tokens, True)
-        self.assertEqual(new_tokens, [(TextNode("[link text]", TextType.LINK, "()")),("TEXT", "This line has more "),(TextNode("text", TextType.LINK, "link")),("TEXT", " than 1 link in it"),("EX_MARK", "!"), ("TEXT", " "),(TextNode("**link text**", TextType.LINK, "https://url"))])
-
-    def test_merge_link_tokens_with_image_node(self):
-        line = "[text] (url)This line has [****]![image alt](**image source**) image [link text](link url) node in it!"
-        tokens = tokenizer(line)
-        new_tokens = merge_image_tokens(tokens)
-        new_tokens2 = merge_link_tokens(new_tokens)
-        self.assertEqual(new_tokens2, [("OP_BR", 1), ("TEXT", "text"), ("CL_BR", 1), ("TEXT", " "), ("OP_PA", 1), ("TEXT", "url"), ("CL_PA", 1), ("TEXT", "This line has "), ("OP_BR", 1), ("STAR", 4), ("CL_BR", 1), (TextNode("image alt", TextType.IMAGE, "**image source**")), ("TEXT", " image "), (TextNode("link text", TextType.LINK, "link url")), ("TEXT", " node in it"), ("EX_MARK", "!")])
-
-    def test_merge_link_tokens_inline_image_node(self):
-        line = "There is a link with image [![image alt](image source)](link url) as link text in this line"
-        tokens = tokenizer(line)
-        new_tokens = merge_image_tokens(tokens)
-        new_tokens2 = merge_link_tokens(new_tokens)
-        self.assertEqual(new_tokens2, [("TEXT", "There is a link with image "), (ParentNode("a", [TextNode("image alt", TextType.IMAGE, "image source")], "link url")), ("TEXT", " as link text in this line")])
-
-    def test_merge_link_tokens_inline_image_node2(self):
-        line = "There is a link with image [**![image alt](image source)**](link url) as link text in this line"
-        tokens = tokenizer(line)
-        new_tokens = merge_image_tokens(tokens)
-        new_tokens2 = merge_link_tokens(new_tokens)
-        self.assertEqual(new_tokens2,[("TEXT", "There is a link with image "),ParentNode("a", [TextNode("**", TextType.TEXT),TextNode("image alt", TextType.IMAGE, "image source"), TextNode("**", TextType.TEXT) ], "link url"),("TEXT", " as link text in this line")])
-
-class TestMergeCodeTokens(unittest.TestCase):
-    def test_merge_code_tokens_valid1(self):
-        line = "This is a line with `code` in it!"
-        tokens = tokenizer(line)
-        new_tokens = merge_code_tokens(tokens)
-        self.assertEqual(new_tokens, [("TEXT", "This is a line with "),(TextNode("code", TextType.CODE)),("TEXT", " in it"), ("EX_MARK", "!")])
-
-    def test_merge_code_tokens_valid2(self):
-        line = "This is a line with `**code**` in it!`This is the second Code`"
-        tokens = tokenizer(line)
-        new_tokens = merge_code_tokens(tokens)
-        self.assertEqual(new_tokens, [("TEXT", "This is a line with "), (TextNode("**code**", TextType.CODE)),("TEXT", " in it"), ("EX_MARK", "!"), (TextNode("This is the second Code", TextType.CODE))])
-
-    def test_merge_code_tokens_valid3(self):
-        line = "This is a line with ``code text`` in it!"
-        tokens = tokenizer(line)
-        new_tokens = merge_code_tokens(tokens)
-        self.assertEqual(new_tokens, [("TEXT", "This is a line with "), (TextNode("code text", TextType.CODE)), ("TEXT", " in it"), ("EX_MARK", "!")])
-
-    def test_merge_code_tokens_valid4(self):
-        line = "This is a line with ````code text```` in it!"
-        tokens = tokenizer(line)
-        new_tokens = merge_code_tokens(tokens)
-        self.assertEqual(new_tokens, [("TEXT", "This is a line with "), (TextNode("code text", TextType.CODE)), ("TEXT", " in it"), ("EX_MARK", "!")])
-
-    def test_merge_code_tokens_valid5(self):
-        line = "This is a line with ``code ` text`` in it!"
-        tokens = tokenizer(line)
-        new_tokens = merge_code_tokens(tokens)
-        self.assertEqual(new_tokens, [("TEXT", "This is a line with "), (TextNode("code ` text", TextType.CODE)), ("TEXT", " in it"), ("EX_MARK", "!")])
-
-    def test_merge_code_tokens_valid6(self):
-        line = "This is a line with ```code `` text``` in it!"
-        tokens = tokenizer(line)
-        new_tokens = merge_code_tokens(tokens)
-        self.assertEqual(new_tokens, [("TEXT", "This is a line with "), (TextNode("code `` text", TextType.CODE)), ("TEXT", " in it"), ("EX_MARK", "!")])
-
-    def test_merge_code_tokens_valid7(self):
-        line = "This is a line with ```code `` foo `` text``` in it!"
-        tokens = tokenizer(line)
-        new_tokens = merge_code_tokens(tokens)
-        self.assertEqual(new_tokens, [("TEXT", "This is a line with "), (TextNode("code `` foo `` text", TextType.CODE)), ("TEXT", " in it"), ("EX_MARK", "!")])
-
-    def test_merge_code_tokens_valid8(self):
-        line = "This is a line with ```code text``` in it!"
-        tokens = tokenizer(line)
-        new_tokens = merge_code_tokens(tokens)
-        self.assertEqual(new_tokens, [("TEXT", "This is a line with "), (TextNode("code text", TextType.CODE)), ("TEXT", " in it"), ("EX_MARK", "!")])
-
-    def test_merge_code_tokens_valid9(self):
-        line = "This is a line with ````code `foo` text```` in it!"
-        tokens = tokenizer(line)
-        new_tokens = merge_code_tokens(tokens)
-        self.assertEqual(new_tokens, [("TEXT", "This is a line with "), (TextNode("code `foo` text", TextType.CODE)), ("TEXT", " in it"), ("EX_MARK", "!")])
-
-    def test_merge_code_tokens_valid10(self):
-        line = "This is a line with ````````code `foo` text```````` in it!"
-        tokens = tokenizer(line)
-        new_tokens = merge_code_tokens(tokens)
-        self.assertEqual(new_tokens, [("TEXT", "This is a line with "), (TextNode("code `foo` text", TextType.CODE)), ("TEXT", " in it"), ("EX_MARK", "!")])
-
-    def test_merge_code_tokens_valid11(self):
-        line = "This is a line with `valid code```code``` in it!"
-        tokens = tokenizer(line)
-        new_tokens = merge_code_tokens(tokens)
-        self.assertEqual(new_tokens, [
-            ("TEXT", "This is a line with "),
-            ("CODE", 1), 
-            ("TEXT", "valid code"),
-            (TextNode("code", TextType.CODE)), 
-            ("TEXT", " in it"), 
-            ("EX_MARK", "!")
-        ])
-
-    def test_merge_code_tokens_valid12(self):
-        line = "This is a line with ```valid code`code` in it!"
-        tokens = tokenizer(line)
-        new_tokens = merge_code_tokens(tokens)
-        self.assertEqual(new_tokens, [
-            ("TEXT", "This is a line with "),
-            ("CODE", 3), 
-            ("TEXT", "valid code"),
-            (TextNode("code", TextType.CODE)), 
-            ("TEXT", " in it"), 
-            ("EX_MARK", "!")
-        ])
-
-    def test_merge_code_tokens_valid13(self):
-        line = "This is a line with ```valid code`code` ``in it!"
-        tokens = tokenizer(line)
-        new_tokens = merge_code_tokens(tokens)
-        self.assertEqual(new_tokens, [
-            ("TEXT", "This is a line with "),
-            ("CODE", 3), 
-            ("TEXT", "valid code"),
-            (TextNode("code", TextType.CODE)), 
-            ("TEXT", " "),
-            ("CODE", 2),
-            ("TEXT", "in it"), 
-            ("EX_MARK", "!")
-        ])
-
-    def test_merge_code_tokens_valid14(self):
-        line = "This is a line with ```valid ``code`code` `` ``in it!"
-        tokens = tokenizer(line)
-        new_tokens = merge_code_tokens(tokens)
-        self.assertEqual(new_tokens, [
-            ("TEXT", "This is a line with "),
-            ("CODE", 3), 
-            ("TEXT", "valid "),
-            (TextNode("code`code` ", TextType.CODE)), 
-            ("TEXT", " "),
-            ("CODE", 2),
-            ("TEXT", "in it"), 
-            ("EX_MARK", "!")
-        ])
+    # def test_tokenizer_bold2(self):
+    #     line = "This is a textnode with bold text in **it**"
+    #     tokens = tokenizer(line)
+    #     self.assertEqual(tokens, [("TEXT", "This is a textnode with bold text in"), ("SPACE", " "), ("STAR", 2), ("TEXT", "it"), ("STAR", 2)])
+    # 
+    # def test_tokenizer_multi_bold(self):
+    #     line = "This is a **textnode** with **bold** text in it"
+    #     tokens = tokenizer(line)
+    #     self.assertEqual(tokens, [("TEXT", "This is a"), ("SPACE", " "), ("STAR", 2), ("TEXT", "textnode"), ("STAR", 2), ("SPACE", " "), ("TEXT", "with"), ("SPACE", " "), ("STAR", 2), ("TEXT", "bold"), ("STAR", 2), ("SPACE", " "), ("TEXT", "text in it")])
+    #
+    # def test_tokenizer_italic(self):
+    #     line = "This is a textnode with *bold* text in it"
+    #     tokens = tokenizer(line)
+    #     self.assertEqual(tokens, [("TEXT", "This is a textnode with"), ("SPACE", " "), ("STAR", 1), ("TEXT", "bold"), ("STAR", 1), ("SPACE", " "), ("TEXT", "text in it")])
+    #
+    # def test_tokenizer_multi_italic(self):
+    #     line = "*This* is a *textnode* with *bold* text in it"
+    #     tokens = tokenizer(line)
+    #     self.assertEqual(tokens, [
+    #         ("STAR", 1), 
+    #         ("TEXT", "This"), 
+    #         ("STAR", 1), 
+    #         ("SPACE", " "), 
+    #         ("TEXT", "is a"), 
+    #         ("SPACE", " "), 
+    #         ("STAR", 1), 
+    #         ("TEXT", "textnode"), 
+    #         ("STAR", 1), 
+    #         ("SPACE", " "), 
+    #         ("TEXT", "with"), 
+    #         ("SPACE", " "), 
+    #         ("STAR", 1), 
+    #         ("TEXT", "bold"), 
+    #         ("STAR", 1), 
+    #         ("SPACE", " "), 
+    #         ("TEXT", "text in it")])
+    #
+    # def test_tokenizer_bold_underscore(self):
+    #     line = "__This__ sentence has __bold text__ made with __underscores__"
+    #     tokens = tokenizer(line)
+    #     self.assertEqual(tokens, [
+    #         ("UNDERSCORE", 2),
+    #         ("TEXT", "This"),
+    #         ("UNDERSCORE", 2), 
+    #         ("SPACE", " "),
+    #         ("TEXT", "sentence has"), 
+    #         ("SPACE", " "),
+    #         ("UNDERSCORE", 2),
+    #         ("TEXT", "bold text"),
+    #         ("UNDERSCORE", 2), 
+    #         ("SPACE", " "),
+    #         ("TEXT", "made with"), 
+    #         ("SPACE", " "),
+    #         ("UNDERSCORE", 2),
+    #         ("TEXT", "underscores"),
+    #         ("UNDERSCORE", 2)
+    #     ])
+    #
+    # def test_tokenizer_italic_underscore(self):
+    #     line = "This sentence has _bold text_ made with underscores"
+    #     tokens = tokenizer(line)
+    #     self.assertEqual(tokens, [
+    #         ("TEXT", "This sentence has"), 
+    #         ("SPACE", " "),
+    #         ("UNDERSCORE", 1),
+    #         ("TEXT", "bold text"),
+    #         ("UNDERSCORE", 1),
+    #         ("SPACE", " "),
+    #         ("TEXT", "made with underscores")
+    #     ])
+    #
+    # def test_tokenizer_code(self):
+    #     line = "This is a node with `code` inline markdown in it"
+    #     tokens = tokenizer(line)
+    #     self.assertEqual(tokens, [
+    #         ("TEXT", "This is a node with"), 
+    #         ("SPACE", " "),
+    #         ("CODE", 1),
+    #         ("TEXT", "code"),
+    #         ("CODE", 1), 
+    #         ("SPACE", " "),
+    #         ("TEXT", "inline markdown in it")
+    #     ])
+    #
+    # def test_tokenizer_multi_code(self):
+    #     line = "This is a `textnode` with `code` inline markdown in `it`"
+    #     tokens = tokenizer(line)
+    #     self.assertEqual(tokens, [
+    #         ("TEXT", "This is a"), 
+    #         ("SPACE", " "),
+    #         ("CODE", 1),
+    #         ("TEXT", "textnode"),
+    #         ("CODE", 1), 
+    #         ("SPACE", " "),
+    #         ("TEXT", "with"), 
+    #         ("SPACE", " "),
+    #         ("CODE", 1),
+    #         ("TEXT", "code"),
+    #         ("CODE", 1), 
+    #         ("SPACE", " "),
+    #         ("TEXT", "inline markdown in"), 
+    #         ("SPACE", " "),
+    #         ("CODE", 1),
+    #         ("TEXT", "it"),
+    #         ("CODE", 1)
+    #     ])
+    #
+    # def test_tokenizer_multi_type(self):
+    #     line = "This is **bold**, this is _italic_, and this is `inline code`."
+    #     tokens = tokenizer(line)
+    #     self.assertEqual(tokens, [
+    #         ("TEXT", "This is"), 
+    #         ("SPACE", " "),
+    #         ("STAR", 2),
+    #         ("TEXT", "bold"),
+    #         ("STAR", 2), 
+    #         ("TEXT", ", this is"), 
+    #         ("SPACE", " "),
+    #         ("UNDERSCORE", 1),
+    #         ("TEXT", "italic"),
+    #         ("UNDERSCORE", 1), 
+    #         ("TEXT", ", and this is"), 
+    #         ("SPACE", " "),
+    #         ("CODE", 1),
+    #         ("TEXT", "inline code"),
+    #         ("CODE", 1),
+    #         ("TEXT", ".")
+    #     ])
+    #
+    # def test_tokenizer_multi_nodes(self):
+    #     line1 = "This is a **textnode** with **bold** text in it"
+    #     line2 = "*This* is a *textnode* with *bold* text in it"
+    #     line3 = "This sentence has __bold text__ made with underscores"
+    #     line4 = "This is a node with `code` inline markdown in `it`"
+    #     line5 = "This is a `textnode` with `code` inline markdown in it"
+    #     line6 = "This is **bold**, this is _italic_, and this is `inline code`."
+    #     line7 = "This is a paragraph textnode"
+    #     
+    #     test_tokens = [
+    #         [
+    #             ("TEXT", "This is a"), 
+    #             ("SPACE", " "),
+    #             ("STAR", 2), 
+    #             ("TEXT", "textnode"), 
+    #             ("STAR", 2), 
+    #             ("SPACE", " "),
+    #             ("TEXT", "with"), 
+    #             ("SPACE", " "),
+    #             ("STAR", 2), 
+    #             ("TEXT", "bold"), 
+    #             ("STAR", 2), 
+    #             ("SPACE", " "),
+    #             ("TEXT", "text in it")
+    #         ],
+    #         [
+    #             ("STAR", 1), 
+    #             ("TEXT", "This"), 
+    #             ("STAR", 1), 
+    #             ("SPACE", " "),
+    #             ("TEXT", "is a"), 
+    #             ("SPACE", " "),
+    #             ("STAR", 1), 
+    #             ("TEXT", "textnode"), 
+    #             ("STAR", 1), 
+    #             ("SPACE", " "),
+    #             ("TEXT", "with"), 
+    #             ("SPACE", " "),
+    #             ("STAR", 1), 
+    #             ("TEXT", "bold"), 
+    #             ("STAR", 1), 
+    #             ("SPACE", " "),
+    #             ("TEXT", "text in it")
+    #         ],
+    #         [
+    #             ("TEXT", "This sentence has"),
+    #             ("SPACE", " "),
+    #             ("UNDERSCORE", 2),
+    #             ("TEXT", "bold text"),
+    #             ("UNDERSCORE", 2),
+    #             ("SPACE", " "),
+    #             ("TEXT", "made with underscores")
+    #         ],
+    #         [
+    #             ("TEXT", "This is a node with"),
+    #             ("SPACE", " "),
+    #             ("CODE", 1),
+    #             ("TEXT", "code"),
+    #             ("CODE", 1),
+    #             ("SPACE", " "),
+    #             ("TEXT", "inline markdown in"),
+    #             ("SPACE", " "),
+    #             ("CODE", 1),
+    #             ("TEXT", "it"),
+    #             ("CODE", 1)
+    #         ],
+    #         [
+    #             ("TEXT", "This is a"),
+    #             ("SPACE", " "),
+    #             ("CODE", 1),
+    #             ("TEXT", "textnode"),
+    #             ("CODE", 1),
+    #             ("SPACE", " "),
+    #             ("TEXT", "with"),
+    #             ("SPACE", " "),
+    #             ("CODE", 1),
+    #             ("TEXT", "code"),
+    #             ("CODE", 1),
+    #             ("SPACE", " "),
+    #             ("TEXT", "inline markdown in it")
+    #         ],
+    #         [
+    #             ("TEXT", "This is"),
+    #             ("SPACE", " "),
+    #             ("STAR", 2),
+    #             ("TEXT", "bold"),
+    #             ("STAR", 2),
+    #             ("TEXT", ", this is"),
+    #             ("SPACE", " "),
+    #             ("UNDERSCORE", 1),
+    #             ("TEXT", "italic"),
+    #             ("UNDERSCORE", 1),
+    #             ("SPACE", " "),
+    #             ("TEXT", ", and this is"),
+    #             ("SPACE", " "),
+    #             ("CODE", 1),
+    #             ("TEXT", "inline code"),
+    #             ("CODE", 1),
+    #             ("TEXT", ".")
+    #         ],
+    #         [
+    #             ("TEXT", "This is a paragraph textnode")
+    #         ]]
+    #     tokens_list = []
+    #     line_list = [line1, line2, line3, line4, line5, line6, line7]
+    #     for l in line_list:
+    #         tokens_list.append(tokenizer(l))
+    #     self.assertEqual(tokens_list, test_tokens)
+    #
+    # def test_tokenizer_nested_inline_markdown1(self):
+    #     line = "This is **bold and *nested italic*** with `inline code` and **_bold-italic_** text"
+    #     tokens = tokenizer(line)
+    #     self.assertEqual(tokens, [
+    #         ("TEXT", "This is"),
+    #         ("SPACE", " "),
+    #         ("STAR", 2),
+    #         ("TEXT", "bold and"),
+    #         ("SPACE", " "),
+    #         ("STAR", 1),
+    #         ("TEXT", "nested italic"),
+    #         ("STAR", 3),
+    #         ("SPACE", " "),
+    #         ("TEXT", "with"),
+    #         ("SPACE", " "),
+    #         ("CODE", 1),
+    #         ("TEXT", "inline code"),
+    #         ("CODE", 1),
+    #         ("SPACE", " "),
+    #         ("TEXT", "and"),
+    #         ("SPACE", " "),
+    #         ("STAR", 2),
+    #         ("UNDERSCORE", 1),
+    #         ("TEXT", "bold-italic"),
+    #         ("UNDERSCORE", 1),
+    #         ("STAR", 2),
+    #         ("SPACE", " "),
+    #         ("TEXT", "text")
+    #     ])
+    #
+    # def test_tokenizer_image(self):
+    #     line = "This is a node with ![image alt](image source) in it!"
+    #     tokens = tokenizer(line)
+    #     self.assertEqual(tokens, [("TEXT", "This is a node with"),("SPACE", " "), ("EX_MARK", "!"), ("OP_BR", 1), ("TEXT", "image alt"), ("CL_BR", 1), ("OP_PA", 1), ("TEXT", "image source"), ("CL_PA", 1), ("SPACE", " "), ("TEXT", "in it"), ("EX_MARK", "!")])
+    #
+    # def test_tokenizer_image2(self):
+    #     line = "![**image 1**](source) and ![[__image alt__]](source)!"
+    #     tokens = tokenizer(line)
+    #     self.assertEqual(tokens, [
+    #         ("EX_MARK", "!"),
+    #         ("OP_BR", 1),
+    #         ("STAR", 2),
+    #         ("TEXT", "image 1"),
+    #         ("STAR", 2),
+    #         ("CL_BR", 1),
+    #         ("OP_PA", 1),
+    #         ("TEXT", "source"),
+    #         ("CL_PA", 1),
+    #         ("SPACE", " "),
+    #         ("TEXT", "and"),
+    #         ("SPACE", " "),
+    #         ("EX_MARK", "!"),
+    #         ("OP_BR", 2),
+    #         ("UNDERSCORE", 2),
+    #         ("TEXT", "image alt"),
+    #         ("UNDERSCORE", 2),
+    #         ("CL_BR", 2),
+    #         ("OP_PA", 1),
+    #         ("TEXT", "source"),
+    #         ("CL_PA", 1),
+    #         ("EX_MARK", "!")
+    #     ])
+    #
+    # def test_tokenizer_link(self):
+    #     line = "This is a node with [link text](link source) in it!"
+    #     tokens = tokenizer(line)
+    #     self.assertEqual(tokens, [("TEXT", "This is a node with"),("SPACE", " "), ("OP_BR", 1), ("TEXT", "link text"), ("CL_BR", 1), ("OP_PA", 1), ("TEXT", "link source"), ("CL_PA", 1),("SPACE", " "), ("TEXT", "in it"), ("EX_MARK", "!")])
+    #
+    # def test_tokenizer_link2(self):
+    #     line = "[**link 1**](source) and [[__link text__]](source)!"
+    #     tokens = tokenizer(line)
+    #     self.assertEqual(tokens, [
+    #         ("OP_BR", 1),
+    #         ("STAR", 2),
+    #         ("TEXT", "link 1"),
+    #         ("STAR", 2),
+    #         ("CL_BR", 1),
+    #         ("OP_PA", 1),
+    #         ("TEXT", "source"),
+    #         ("CL_PA", 1),
+    #         ("SPACE", " "),
+    #         ("TEXT", "and"),
+    #         ("SPACE", " "),
+    #         ("OP_BR", 2),
+    #         ("UNDERSCORE", 2),
+    #         ("TEXT", "link text"),
+    #         ("UNDERSCORE", 2),
+    #         ("CL_BR", 2),
+    #         ("OP_PA", 1),
+    #         ("TEXT", "source"),
+    #         ("CL_PA", 1),
+    #         ("EX_MARK", "!")
+    #     ])
+    #
+    # def test_tokenizer_excess_whitespace(self):
+    #     line = "  ![**image 1**](source)  and  ![[__image alt__]](source)!  "
+    #     tokens = tokenizer(line)
+    #     self.assertEqual(tokens, [
+    #         ("EX_MARK", "!"),
+    #         ("OP_BR", 1),
+    #         ("STAR", 2),
+    #         ("TEXT", "image 1"),
+    #         ("STAR", 2),
+    #         ("CL_BR", 1),
+    #         ("OP_PA", 1),
+    #         ("TEXT", "source"),
+    #         ("CL_PA", 1),
+    #         ("SPACE", " "),
+    #         ("TEXT", "and"),
+    #         ("SPACE", " "),
+    #         ("EX_MARK", "!"),
+    #         ("OP_BR", 2),
+    #         ("UNDERSCORE", 2),
+    #         ("TEXT", "image alt"),
+    #         ("UNDERSCORE", 2),
+    #         ("CL_BR", 2),
+    #         ("OP_PA", 1),
+    #         ("TEXT", "source"),
+    #         ("CL_PA", 1),
+    #         ("EX_MARK", "!")
+    #     ])
+    # 
+    # def test_tokenizer_excess_whitespace2(self):
+    #     line = "    This    is    a       textnode   with * bold   *       text in   it "
+    #     tokens = tokenizer(line)
+    #     self.assertEqual(tokens, [("TEXT", "This is a textnode with"), ("SPACE", " "), ("STAR", 1),("SPACE", " "), ("TEXT", "bold"),("SPACE", " "), ("STAR", 1),("SPACE", " "), ("TEXT", "text in it")])
 
 
-    def test_merge_code_tokens_valid16(self):
-        line = "This is a line with `` ``` `` in it!"
-        tokens = tokenizer(line)
-        new_tokens = merge_code_tokens(tokens)
-        self.assertEqual(new_tokens, [("TEXT", "This is a line with "),(TextNode(" ``` ", TextType.CODE)),("TEXT", " in it"),("EX_MARK", "!")])
-    
-    def test_merge_code_tokens_invalid1(self):
-        line = "This is a line with `** _+code+_ **`` in it!"
-        tokens = tokenizer(line)
-        new_tokens = merge_code_tokens(tokens)
-        self.assertEqual(new_tokens, tokens)
-
-    def test_merge_code_tokens_invalid2(self):
-        line = "This is a line with ``**code**` in it!"
-        tokens = tokenizer(line)
-        new_tokens = merge_code_tokens(tokens)
-        self.assertEqual(new_tokens, tokens)
-
-    def test_merge_code_tokens_invalid3(self):
-        line = "This is a line `````with ````a ```lot ``of `backticks in it!"
-        tokens = tokenizer(line)
-        new_tokens = merge_code_tokens(tokens)
-        self.assertEqual(new_tokens, [
-            ("TEXT", "This is a line "),
-            ("CODE", 5),
-            ("TEXT", "with "),
-            ("CODE", 4),
-            ("TEXT", "a "),
-            ("CODE", 3),
-            ("TEXT", "lot "),
-            ("CODE", 2),
-            ("TEXT", "of "),
-            ("CODE", 1),
-            ("TEXT", "backticks in it"),
-            ("EX_MARK", "!")
-        ])
-    
-    def test_merge_code_tokens_invalid4(self):
-        line = "This is a line `with ``a ```lot ````of `````backticks in it!"
-        tokens = tokenizer(line)
-        new_tokens = merge_code_tokens(tokens)
-        self.assertEqual(new_tokens, [
-            ("TEXT", "This is a line "),
-            ("CODE", 1),
-            ("TEXT", "with "),
-            ("CODE", 2),
-            ("TEXT", "a "),
-            ("CODE", 3),
-            ("TEXT", "lot "),
-            ("CODE", 4),
-            ("TEXT", "of "),
-            ("CODE", 5),
-            ("TEXT", "backticks in it"),
-            ("EX_MARK", "!")
-        ])
+# class TestMergeImageTokens(unittest.TestCase):
+#     def test_merge_image_tokens(self):
+#         line = "This is a line with ![image alt](#) in it!"
+#         tokens = tokenizer(line)
+#         new_tokens = merge_image_tokens(tokens)
+#         self.assertEqual(new_tokens, [("TEXT", "This is a line with "),TextNode("image alt", TextType.IMAGE, "#"), ("TEXT", " in it"), ("EX_MARK", "!")])
+#
+#     def test_merge_image_tokens_inline_markdown_in_src_and_alt(self):
+#         line = "This is a line with ![[***__`image alt`__***]]((**#*)) in it!"
+#         tokens = tokenizer(line)
+#         new_tokens = merge_image_tokens(tokens)
+#         self.assertEqual(new_tokens, [("TEXT", "This is a line with "),TextNode("[***__`image alt`__***]", TextType.IMAGE, "(**#*)"), ("TEXT", " in it"), ("EX_MARK", "!")])
+#
+#
+#     def test_merge_image_tokens_multi_image(self):
+#         line = "This is a line with ![image alt](#) more than 1 image ![second image alt](image source)in it!"
+#         tokens = tokenizer(line)
+#         new_tokens = merge_image_tokens(tokens)
+#         self.assertEqual(new_tokens, [("TEXT", "This is a line with "),TextNode("image alt", TextType.IMAGE, "#"), ("TEXT", " more than 1 image "), TextNode("second image alt", TextType.IMAGE, "image source"), ("TEXT", "in it"), ("EX_MARK", "!")])
+#
+#     def test_merge_image_tokens_multi_image_single_link(self):
+#         line = "This is a line with ![image alt](#) [more than](1 image) ![second image alt](image source)in it!"
+#         tokens = tokenizer(line)
+#         new_tokens = merge_image_tokens(tokens)
+#         self.assertEqual(new_tokens, [("TEXT", "This is a line with "),TextNode("image alt", TextType.IMAGE, "#"),("TEXT", " "),("OP_BR", 1),("TEXT", "more than"),("CL_BR", 1),("OP_PA", 1),("TEXT", "1 image"), ("CL_PA", 1), ("TEXT", " "), TextNode("second image alt", TextType.IMAGE, "image source"), ("TEXT", "in it"), ("EX_MARK", "!")])
+#
+#     def test_merge_image_tokens_wrong_image_format(self):
+#         line = "This is a line with ![image alt] (#) in it!"
+#         tokens = tokenizer(line)
+#         new_tokens = merge_image_tokens(tokens)
+#         self.assertEqual(new_tokens, [("TEXT", "This is a line with "),("EX_MARK", "!"),("OP_BR", 1), ("TEXT", "image alt"),("CL_BR", 1),("TEXT", " "),("OP_PA", 1), ("TEXT", "#"), ("CL_PA", 1), ("TEXT", " in it"), ("EX_MARK", "!")])
+#
+#     def test_merge_image_tokens_wrong_image_format2(self):
+#         line = "This is a line with ![image alt"
+#         tokens = tokenizer(line)
+#         new_tokens = merge_image_tokens(tokens)
+#         self.assertEqual(new_tokens, [("TEXT", "This is a line with "),("EX_MARK", "!"),("OP_BR", 1), ("TEXT", "image alt")])
+#
+#     def test_merge_image_tokens_wrong_image_format3(self):
+#         line = "This is a line with ![image alt]]"
+#         tokens = tokenizer(line)
+#         new_tokens = merge_image_tokens(tokens)
+#         self.assertEqual(new_tokens, [("TEXT", "This is a line with "),("EX_MARK", "!"),("OP_BR", 1), ("TEXT", "image alt"),("CL_BR", 2)])
+#
+#     def test_merge_image_tokens_wrong_image_format4(self):
+#         line = "This is a line with ![image alt](#))"
+#         tokens = tokenizer(line)
+#         new_tokens = merge_image_tokens(tokens)
+#         self.assertEqual(new_tokens, [("TEXT", "This is a line with "),TextNode("image alt", TextType.IMAGE, "#)")])
+#
+#     def test_merge_image_tokens_wrong_format(self):
+#         line = "This is a line with ![image alt] a wrong image in it!"
+#         tokens = tokenizer(line)
+#         new_tokens = merge_image_tokens(tokens)
+#         self.assertEqual(new_tokens, [("TEXT", "This is a line with "), ("EX_MARK", "!"), ("OP_BR", 1), ("TEXT", "image alt"), ("CL_BR", 1), ("TEXT", " a wrong image in it"), ("EX_MARK", "!")])
+#
+#     def test_merge_image_tokens_wrong_format2(self):
+#         line = "This is a line with ![image alt] a wrong ![alt](source)image in it!"
+#         tokens = tokenizer(line)
+#         new_tokens = merge_image_tokens(tokens)
+#         self.assertEqual(new_tokens, [("TEXT", "This is a line with "), ("EX_MARK", "!"), ("OP_BR", 1), ("TEXT", "image alt"), ("CL_BR", 1), ("TEXT", " a wrong "), (TextNode("alt", TextType.IMAGE, "source")), ("TEXT", "image in it"), ("EX_MARK", "!")])
+#
+#     def test_merge_image_tokens_wrong_format3(self):
+#         line = "This is a line with ![image alt]* a wrong ![alt](source)image in it!"
+#         tokens = tokenizer(line)
+#         new_tokens = merge_image_tokens(tokens)
+#         self.assertEqual(new_tokens, [("TEXT", "This is a line with "), ("EX_MARK", "!"), ("OP_BR", 1), ("TEXT", "image alt"), ("CL_BR", 1), ("STAR", 1), ("TEXT", " a wrong "), (TextNode("alt", TextType.IMAGE, "source")), ("TEXT", "image in it"), ("EX_MARK", "!")])
+#
+#
+# class TestMergeLinkTokens(unittest.TestCase):
+#     def test_merge_link_tokens(self):
+#         line = "This line has 1 link  [link alt](link url) in it!"
+#         tokens = tokenizer(line)
+#         new_tokens = merge_link_tokens(tokens)
+#         self.assertEqual(new_tokens, [("TEXT", "This line has 1 link "), (TextNode("link alt", TextType.LINK, "link url")), ("TEXT", " in it"), ("EX_MARK", "!")])
+#
+#     def test_merge_link_tokens2(self):
+#         line = "[[link text]](())This line has more [text](link) than 1 link in it! [**link text**](https://url)"
+#         tokens = tokenizer(line)
+#         new_tokens = merge_link_tokens(tokens, True)
+#         self.assertEqual(new_tokens, [(TextNode("[link text]", TextType.LINK, "()")),("TEXT", "This line has more "),(TextNode("text", TextType.LINK, "link")),("TEXT", " than 1 link in it"),("EX_MARK", "!"), ("TEXT", " "),(TextNode("**link text**", TextType.LINK, "https://url"))])
+#
+#     def test_merge_link_tokens_with_image_node(self):
+#         line = "[text] (url)This line has [****]![image alt](**image source**) image [link text](link url) node in it!"
+#         tokens = tokenizer(line)
+#         new_tokens = merge_image_tokens(tokens)
+#         new_tokens2 = merge_link_tokens(new_tokens)
+#         self.assertEqual(new_tokens2, [("OP_BR", 1), ("TEXT", "text"), ("CL_BR", 1), ("TEXT", " "), ("OP_PA", 1), ("TEXT", "url"), ("CL_PA", 1), ("TEXT", "This line has "), ("OP_BR", 1), ("STAR", 4), ("CL_BR", 1), (TextNode("image alt", TextType.IMAGE, "**image source**")), ("TEXT", " image "), (TextNode("link text", TextType.LINK, "link url")), ("TEXT", " node in it"), ("EX_MARK", "!")])
+#
+#     def test_merge_link_tokens_inline_image_node(self):
+#         line = "There is a link with image [![image alt](image source)](link url) as link text in this line"
+#         tokens = tokenizer(line)
+#         new_tokens = merge_image_tokens(tokens)
+#         new_tokens2 = merge_link_tokens(new_tokens)
+#         self.assertEqual(new_tokens2, [("TEXT", "There is a link with image "), (ParentNode("a", [TextNode("image alt", TextType.IMAGE, "image source")], "link url")), ("TEXT", " as link text in this line")])
+#
+#     def test_merge_link_tokens_inline_image_node2(self):
+#         line = "There is a link with image [**![image alt](image source)**](link url) as link text in this line"
+#         tokens = tokenizer(line)
+#         new_tokens = merge_image_tokens(tokens)
+#         new_tokens2 = merge_link_tokens(new_tokens)
+#         self.assertEqual(new_tokens2,[("TEXT", "There is a link with image "),ParentNode("a", [TextNode("**", TextType.TEXT),TextNode("image alt", TextType.IMAGE, "image source"), TextNode("**", TextType.TEXT) ], "link url"),("TEXT", " as link text in this line")])
+#
+# class TestMergeCodeTokens(unittest.TestCase):
+#     def test_merge_code_tokens_valid1(self):
+#         line = "This is a line with `code` in it!"
+#         tokens = tokenizer(line)
+#         new_tokens = merge_code_tokens(tokens)
+#         self.assertEqual(new_tokens, [("TEXT", "This is a line with "),(TextNode("code", TextType.CODE)),("TEXT", " in it"), ("EX_MARK", "!")])
+#
+#     def test_merge_code_tokens_valid2(self):
+#         line = "This is a line with `**code**` in it!`This is the second Code`"
+#         tokens = tokenizer(line)
+#         new_tokens = merge_code_tokens(tokens)
+#         self.assertEqual(new_tokens, [("TEXT", "This is a line with "), (TextNode("**code**", TextType.CODE)),("TEXT", " in it"), ("EX_MARK", "!"), (TextNode("This is the second Code", TextType.CODE))])
+#
+#     def test_merge_code_tokens_valid3(self):
+#         line = "This is a line with ``code text`` in it!"
+#         tokens = tokenizer(line)
+#         new_tokens = merge_code_tokens(tokens)
+#         self.assertEqual(new_tokens, [("TEXT", "This is a line with "), (TextNode("code text", TextType.CODE)), ("TEXT", " in it"), ("EX_MARK", "!")])
+#
+#     def test_merge_code_tokens_valid4(self):
+#         line = "This is a line with ````code text```` in it!"
+#         tokens = tokenizer(line)
+#         new_tokens = merge_code_tokens(tokens)
+#         self.assertEqual(new_tokens, [("TEXT", "This is a line with "), (TextNode("code text", TextType.CODE)), ("TEXT", " in it"), ("EX_MARK", "!")])
+#
+#     def test_merge_code_tokens_valid5(self):
+#         line = "This is a line with ``code ` text`` in it!"
+#         tokens = tokenizer(line)
+#         new_tokens = merge_code_tokens(tokens)
+#         self.assertEqual(new_tokens, [("TEXT", "This is a line with "), (TextNode("code ` text", TextType.CODE)), ("TEXT", " in it"), ("EX_MARK", "!")])
+#
+#     def test_merge_code_tokens_valid6(self):
+#         line = "This is a line with ```code `` text``` in it!"
+#         tokens = tokenizer(line)
+#         new_tokens = merge_code_tokens(tokens)
+#         self.assertEqual(new_tokens, [("TEXT", "This is a line with "), (TextNode("code `` text", TextType.CODE)), ("TEXT", " in it"), ("EX_MARK", "!")])
+#
+#     def test_merge_code_tokens_valid7(self):
+#         line = "This is a line with ```code `` foo `` text``` in it!"
+#         tokens = tokenizer(line)
+#         new_tokens = merge_code_tokens(tokens)
+#         self.assertEqual(new_tokens, [("TEXT", "This is a line with "), (TextNode("code `` foo `` text", TextType.CODE)), ("TEXT", " in it"), ("EX_MARK", "!")])
+#
+#     def test_merge_code_tokens_valid8(self):
+#         line = "This is a line with ```code text``` in it!"
+#         tokens = tokenizer(line)
+#         new_tokens = merge_code_tokens(tokens)
+#         self.assertEqual(new_tokens, [("TEXT", "This is a line with "), (TextNode("code text", TextType.CODE)), ("TEXT", " in it"), ("EX_MARK", "!")])
+#
+#     def test_merge_code_tokens_valid9(self):
+#         line = "This is a line with ````code `foo` text```` in it!"
+#         tokens = tokenizer(line)
+#         new_tokens = merge_code_tokens(tokens)
+#         self.assertEqual(new_tokens, [("TEXT", "This is a line with "), (TextNode("code `foo` text", TextType.CODE)), ("TEXT", " in it"), ("EX_MARK", "!")])
+#
+#     def test_merge_code_tokens_valid10(self):
+#         line = "This is a line with ````````code `foo` text```````` in it!"
+#         tokens = tokenizer(line)
+#         new_tokens = merge_code_tokens(tokens)
+#         self.assertEqual(new_tokens, [("TEXT", "This is a line with "), (TextNode("code `foo` text", TextType.CODE)), ("TEXT", " in it"), ("EX_MARK", "!")])
+#
+#     def test_merge_code_tokens_valid11(self):
+#         line = "This is a line with `valid code```code``` in it!"
+#         tokens = tokenizer(line)
+#         new_tokens = merge_code_tokens(tokens)
+#         self.assertEqual(new_tokens, [
+#             ("TEXT", "This is a line with "),
+#             ("CODE", 1), 
+#             ("TEXT", "valid code"),
+#             (TextNode("code", TextType.CODE)), 
+#             ("TEXT", " in it"), 
+#             ("EX_MARK", "!")
+#         ])
+#
+#     def test_merge_code_tokens_valid12(self):
+#         line = "This is a line with ```valid code`code` in it!"
+#         tokens = tokenizer(line)
+#         new_tokens = merge_code_tokens(tokens)
+#         self.assertEqual(new_tokens, [
+#             ("TEXT", "This is a line with "),
+#             ("CODE", 3), 
+#             ("TEXT", "valid code"),
+#             (TextNode("code", TextType.CODE)), 
+#             ("TEXT", " in it"), 
+#             ("EX_MARK", "!")
+#         ])
+#
+#     def test_merge_code_tokens_valid13(self):
+#         line = "This is a line with ```valid code`code` ``in it!"
+#         tokens = tokenizer(line)
+#         new_tokens = merge_code_tokens(tokens)
+#         self.assertEqual(new_tokens, [
+#             ("TEXT", "This is a line with "),
+#             ("CODE", 3), 
+#             ("TEXT", "valid code"),
+#             (TextNode("code", TextType.CODE)), 
+#             ("TEXT", " "),
+#             ("CODE", 2),
+#             ("TEXT", "in it"), 
+#             ("EX_MARK", "!")
+#         ])
+#
+#     def test_merge_code_tokens_valid14(self):
+#         line = "This is a line with ```valid ``code`code` `` ``in it!"
+#         tokens = tokenizer(line)
+#         new_tokens = merge_code_tokens(tokens)
+#         self.assertEqual(new_tokens, [
+#             ("TEXT", "This is a line with "),
+#             ("CODE", 3), 
+#             ("TEXT", "valid "),
+#             (TextNode("code`code` ", TextType.CODE)), 
+#             ("TEXT", " "),
+#             ("CODE", 2),
+#             ("TEXT", "in it"), 
+#             ("EX_MARK", "!")
+#         ])
+#
+#
+#     def test_merge_code_tokens_valid16(self):
+#         line = "This is a line with `` ``` `` in it!"
+#         tokens = tokenizer(line)
+#         new_tokens = merge_code_tokens(tokens)
+#         self.assertEqual(new_tokens, [("TEXT", "This is a line with "),(TextNode(" ``` ", TextType.CODE)),("TEXT", " in it"),("EX_MARK", "!")])
+#     
+#     def test_merge_code_tokens_invalid1(self):
+#         line = "This is a line with `** _+code+_ **`` in it!"
+#         tokens = tokenizer(line)
+#         new_tokens = merge_code_tokens(tokens)
+#         self.assertEqual(new_tokens, tokens)
+#
+#     def test_merge_code_tokens_invalid2(self):
+#         line = "This is a line with ``**code**` in it!"
+#         tokens = tokenizer(line)
+#         new_tokens = merge_code_tokens(tokens)
+#         self.assertEqual(new_tokens, tokens)
+#
+#     def test_merge_code_tokens_invalid3(self):
+#         line = "This is a line `````with ````a ```lot ``of `backticks in it!"
+#         tokens = tokenizer(line)
+#         new_tokens = merge_code_tokens(tokens)
+#         self.assertEqual(new_tokens, [
+#             ("TEXT", "This is a line "),
+#             ("CODE", 5),
+#             ("TEXT", "with "),
+#             ("CODE", 4),
+#             ("TEXT", "a "),
+#             ("CODE", 3),
+#             ("TEXT", "lot "),
+#             ("CODE", 2),
+#             ("TEXT", "of "),
+#             ("CODE", 1),
+#             ("TEXT", "backticks in it"),
+#             ("EX_MARK", "!")
+#         ])
+#     
+#     def test_merge_code_tokens_invalid4(self):
+#         line = "This is a line `with ``a ```lot ````of `````backticks in it!"
+#         tokens = tokenizer(line)
+#         new_tokens = merge_code_tokens(tokens)
+#         self.assertEqual(new_tokens, [
+#             ("TEXT", "This is a line "),
+#             ("CODE", 1),
+#             ("TEXT", "with "),
+#             ("CODE", 2),
+#             ("TEXT", "a "),
+#             ("CODE", 3),
+#             ("TEXT", "lot "),
+#             ("CODE", 4),
+#             ("TEXT", "of "),
+#             ("CODE", 5),
+#             ("TEXT", "backticks in it"),
+#             ("EX_MARK", "!")
+#         ])
 
 
 

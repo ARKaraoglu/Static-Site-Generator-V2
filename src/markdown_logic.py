@@ -13,36 +13,72 @@ class TokenSymbols(Enum):
     STAR = "*"
     UNDERSCORE = "_"
     CODE = "`"
+    SPACE = " "
 
 # Description: Removes extra leading, trailing or whitespace between words from a text tuple
 # Parameters:
 # tuple_list -> list of tuples
 # Return:
 # new_list -> list of tuples
-def remove_whitespace(tuple_list):
+def remove_excess_whitespace(tuple_list):
     new_list = []
 
-    for t in tuple_list:
-        
-        if t[0] != "TEXT":
-            new_list.append(t)
-        else:
-            tuple_text = t[1]
-            stripped_tuple_text = ""
-            whitespace = False
-            for i in tuple_text:
-                if i == " " and whitespace == False:
-                    whitespace = True
-                    stripped_tuple_text += " "
-                elif i == " " and whitespace == True:
-                    continue
-                else:
-                    whitespace = False
-                    stripped_tuple_text += i
+    for x in range(0, len(tuple_list) - 1):
+        token = tuple_list[x]
+        next_token = tuple_list[x + 1]
 
-            new_list.append(("TEXT", stripped_tuple_text))
+        if token[0] == "SPACE":
+            if next_token[0] == "SPACE":
+                continue
+            else:
+                new_list.append(token)
+        else:
+            new_list.append(token)
+
     return new_list
 
+#BUG: Tokens does not include the last text token
+def merge_and_remove_text_tokens(tokens):
+    new_list = []
+
+    x = 0
+    while x < len(tokens):
+
+        if tokens[x][0] == "TEXT":
+            merge_list = []
+            while tokens[x][0] == "TEXT" or tokens[x][0] == "SPACE":
+                merge_list.append(tokens[x])
+                x += 1
+
+                if x == len(tokens):
+                    break
+            print(f"tokens: {tokens}")
+            print(f"merge list: {merge_list}")
+            match len(merge_list):
+                case 0:
+                    raise Exception("merge_list is empty. Not suppose to happen")
+                case 1:
+                    new_list.extend(merge_list)
+                case 2:
+                    new_list.extend(merge_list)
+                case 3:
+                    text = ""
+                    for y in range(0, 3):
+                        text += merge_list[y][1]
+                    new_list.append(("TEXT", text))
+                case _:
+                    last_index = len(merge_list) - 1
+                    text = ""
+                    if merge_list[last_index][0] == "SPACE":
+                        merge_list.pop(last_index)
+
+                    for y in range(0, len(merge_list)):
+                        text += merge_list[y][1]
+                    new_list.append(("TEXT", text))
+        else:
+            new_list.append(tokens[x])
+        x += 1
+    return new_list
 
 # Description: Seperates a line into tuple tokens representing inline markdowns including regular text
 # Parameters:
@@ -114,6 +150,13 @@ def tokenizer(line):
                     node_tuples_list.append(("TEXT", current_text))
                     current_text = ""
                     node_tuples_list.append(("CL_PA", 1))
+            case " ":
+                if len(current_text) == 0:
+                    node_tuples_list.append(("SPACE", " "))
+                else:
+                    node_tuples_list.append(("TEXT", current_text))
+                    current_text = ""
+                    node_tuples_list.append(("SPACE", " "))
             case _:
                 current_text += index
 
@@ -136,8 +179,9 @@ def tokenizer(line):
     if len(node_tuples_list) == 1:
         filtered_tuples_list = node_tuples_list
 
-    stripped_tuple_list = remove_whitespace(filtered_tuples_list)
-    return stripped_tuple_list 
+    stripped_tuple_list = remove_excess_whitespace(filtered_tuples_list)
+    merged_text_tokens_list = merge_and_remove_text_tokens(stripped_tuple_list)
+    return merged_text_tokens_list 
 
 
 
@@ -337,41 +381,8 @@ def merge_link_tokens(tokens, debug = None):
         x += 1
     return new_tokens
 
-def unnest_code_tokens(tokens):
-    new_list = []
 
-    for x in range(0, len(tokens)):
-        if tokens[x][0] == "CODE" and tokens[x][1] > 1:
-            for x in range(0, (tokens[x][1] - 1)):
-                new_list.append(("CODE", 1))
-
-
-#NOTE: is code[1] > 1, add a textnode automatically using while loop because it is easier
-def inline_nested_code_check(tokens):
-    
-    merged_tokens = []
-    x = 0
-    while x < len(tokens):
-        if isinstance(tokens[x], TextNode):
-            if tokens[x].text_type == TextType.CODE and tokens[x].text == "":
-                x += 1
-                text = ""
-
-                while isinstance(tokens[x], TextNode) == False:
-                    if tokens[x][0] == "TEXT":
-                        text += tokens[x][1]
-                    else:
-                        text += add_symbols(tokens[x])
-                    x += 1
-                    
-
-
-        else:
-           merged_tokens.append(tokens[x])
-        x += 1
-
-
-# Description: Merges 2 code tuples and everything in between them into code textnode
+# Description: Merges 2 valid code tuples and everything in between them into a code textnode
 # Parameters:
 # tokens -> list of tuple tokens
 # Return:
@@ -389,12 +400,10 @@ def merge_code_tokens(tokens):
                 code_tuple_count = 1
                 start_code_value = tokens[x][1]
                 x += 1
-                print(f"while loop start: {code_start}")
 
                 # loop can end in 2 conditions:
                 # 1: same value code tuple found
                 # 2: end of the list came
-
                 while x < (len(tokens) - 1):
                     # If tokens[x] is a CODE tuple
                     if tokens[x][0] == "CODE":
@@ -409,20 +418,8 @@ def merge_code_tokens(tokens):
                         code_text += add_symbols(tokens[x])
                     x += 1
                 
-                print(f"x value after first while loop: {x}")
-                print(f"code tuples found: {code_tuple_count}")
-                # ` `               -> valid(TextNode(" ", Code))
-                # `` ` ``           -> valid(TextNode(" ` ", Code))  
-                # ``` `` ```        -> valid(TextNode(" `` ", Code))
-                # ``` ``            -> invalid 
-                # ``` ``foo`` ```   -> valid(TextNode(" ``foo`` ", Code))
-                # ```foo```         -> valid(TextNode("foo", Code))
-                # ``` foo ```!`     -> valid
-
-                print(f"current x value: {x}")
                 code_node = None
                 if x == (len(tokens) - 1):
-                    print("End of the tuple list")
                     if tokens[x][0] == "CODE":
                         if tokens[x][1] == start_code_value:
                             code_node = TextNode(code_text, TextType.CODE)
@@ -437,87 +434,144 @@ def merge_code_tokens(tokens):
                     else:
                         new_tokens.extend(tokens[code_start:])
                 elif tokens[x][0] == "CODE" and tokens[x][1] == start_code_value:
-                    print("Same value code tuple found")
                     code_node = TextNode(code_text, TextType.CODE)
                 else:
                     raise Exception(f"Unexpected behavior encountered!\n  Tokens: {tokens}\n  Current Token:{tokens[x]}\n  Current Code Text:{code_text}\n  Code Start:{code_start}\n  x:{x}\n")
                 
                 if isinstance(code_node, TextNode):
                     new_tokens.append(code_node)
-                
-                # if tokens[x][1] > 1:
-                #     token_value = tokens[x][1]
-                #     tokens[x] = ("CODE", token_value - 1)
-                #This is a line with `valid code```code``` in it!
             else:
-                print(f"non code token appended: {tokens[x]}")
                 new_tokens.append(tokens[x])
-        print(f"Current token: {tokens[x]}, x value: {x}")
         x += 1
     return new_tokens
 
+def symbol_list(token):
+    s_list = []
+
+    for x in range(0, token[1]):
+        s_list.append(TokenSymbols[token[0]])
+
+    return s_list
+
+# def process_symbol_stack(symbol_stack):
+#     new_stack = []
+#     x = 0
+#     opening = []
+#     em_count = 0
+#     text = ""
+#     is_opening = True
+#     while x < len(symbol_stack):
+#         if is_opening:
+#             if x == 0:
+#                 opening.append(symbol_stack[x])
+#             elif opening[0] == symbol_stack[x]:
+#                 opening.append(symbol_stack[x])
+#             else:
+#                 is_opening = False
+#                 text += symbol_stack[x]
+#         else:
+#             if symbol_stack[x] == opening[0]:
+#                 opening.pop[0]
+#                 em_count += 1
+#             el
+#             
+#
+#             
+#
+#
+#
+#
+#     while x < len(symbol_stack):
+#         
+        
+
+def merge_bold_italic_tokens(tokens):
+    new_tokens = []
+
+    x = 0
+    while x < len(tokens):
+        node_text = ""
 
 
-    # while x < len(tokens):
-    #     text = ""
-    #     code_start = 0
-    #     
-    #     if tokens[x][0] == "CODE" and tokens[x][1] == 1:
-    #         code_start = x
-    #         x += 1
-    #         if x != len(tokens):
-    #             while tokens[x][0] != "CODE" and x < len(tokens) - 1:
-    #                 if tokens[x][0] == "TEXT":
-    #                     text += tokens[x][1]
-    #                 else:
-    #                     text += add_symbols(tokens[x])
-    #                 x += 1
-    #             print(f"text:{text}")
-    #             if x + 1 == len(tokens) and tokens[x][0] == "CODE":
-    #                 new_tokens.append(TextNode(text, TextType.CODE))
-    #                 break
-    #             elif x + 1 != len(tokens) and tokens[x][0] == "CODE":
-    #                 new_tokens.append(TextNode(text, TextType.CODE))
-    #             else:
-    #                 new_tokens.extend(tokens[code_start:x])
-    #   
-    #             if tokens[x][1] > 1:
-    #                 token = (tokens[x][0], tokens[x][1] - 1)
-    #                 new_tokens.append(token)
-    #         else:
-    #             new_tokens.append(tokens[x - 1])
-    #             break
-    #     elif tokens[x][0] == "CODE" and tokens[x][1] > 1:
-    #         print("here")
-    #         token_num = tokens[x][1]
-    #         
-    #         while token_num >= 2:
-    #             token_num -= 2
-    #             new_tokens.append(TextNode("", TextType.CODE))
-    #         
-    #         if token_num == 1:
-    #             new_tokens.append(("CODE", 1))
-    #         print(f"new tokens {new_tokens}")
-    #     else:
-    #         new_tokens.append(tokens[x])
-    #     x += 1
-    # print(f"1st function:{new_tokens}")
-    # return inline_nested_code_check(new_tokens)
+        if isinstance(tokens[x], tuple):
+            # VALID
+            # *foo*
+            # **foo**
+            # _foo_
+            # __foo__
+            # _**foo**_
+            # *__foo__*
+            # ___foo___
+            # ***foo***
+            if tokens[x][0] == "STAR" or tokens[x][0] == "UNDERSCORE":
+                loop_start = x 
+                inline_markdown_list = [] 
+                
+                # Inline markdown beginning
+                #NOTE: Might not want to break from the loop!
+                #WARNING: COMMONMARK, does it differently
+                #TODO: Add " " or space as a token as well
+                while x < len(tokens) - 1:
+                    if isinstance(tokens[x], TextNode):
+                        break
+                    elif tokens[x][0] == "TEXT":
+                        break
+                    elif tokens[x][0] == "EX_MARK":
+                        break
+                    else:
+                        inline_markdown_list.append(tokens[x])
+                    x += 1
+                # *_*foo*
+
+                    if x == len(tokens) - 1:
+                        pass
+                    elif tokens[x][0] == "TEXT":
+                        pass
+                    elif tokens[x][0] == "EX_MARK":
+                        pass
+                    else:
+                        pass
+
+
+
+
+
+
+
+
+                else:
+                    pass
+
+                        
+                            
+
+
+        else:
+            new_tokens.append(tokens[x])
+
+
+def merge_text_tokens(tokens):
+    pass
+
 
 # CURRENT Path
 # Markdown -> markdown_to_html -> markdown_to_block -> text_to_textnode
 #NOTE: AST will turn tokens into textnodes
 # node_tokens_list -> 1D list
 # It will recieve tokens from tokenizers to process them further!
-def AST(tokens):
-
+def AST(line):
+    
+    #NOTE: Make sure the merge tokens functions location reflect below
+    tokens = tokenizer(line)
     merged_code_tokens = merge_code_tokens(tokens)
     merged_image_tokens = merge_image_tokens(merged_code_tokens)
     merged_link_tokens = merge_link_tokens(merged_image_tokens)
+    merged_bold_italic_tokens = merge_bold_italic_tokens(merged_link_tokens)
+    merged_text_tokens = merge_text_tokens(merged_bold_italic_tokens)
 
 
 
-    return merged_link_tokens 
+    return merged_text_tokens 
 
 
 

@@ -11,7 +11,7 @@ It continues here to make sure the paragraph spans multiple sentences.
 
 ## Subheading
 
-> This is a blockquote that includes **bold emphasis**.
+> This is a blockquote that includes **bold italic**.
 > It continues onto another line with _italic words_ and even `inline code`.
 > Blockquotes can be multiple lines of quoted text.
 
