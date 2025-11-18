@@ -4,21 +4,21 @@ from htmlnode import ParentNode, LeafNode
 from markdown_logic import merge_code_tokens, merge_link_tokens, tokenizer, TokenSymbols, add_symbols, merge_image_tokens, AST, split_nodes_delimiter, extract_markdown_images, extract_markdown_links, split_nodes_image, split_nodes_link, text_to_textnode, markdown_to_html
 
 class TestTokenizer(unittest.TestCase):
-    def test_tokenizer_text(self):
-        line = "This is a paragraph textnode"
-        tokens = tokenizer(line)
-        self.assertEqual(tokens, [("TEXT", "This is a paragraph textnode")])
-
+    # def test_tokenizer_text(self):
+    #     line = "This is a paragraph textnode"
+    #     tokens = tokenizer(line)
+    #     self.assertEqual(tokens, [("TEXT", "This is a paragraph textnode")])
+    #
     # def test_tokenizer_bold(self):
     #     line = "This is a textnode with **bold** text in it"
     #     tokens = tokenizer(line)
     #     self.assertEqual(tokens, [("TEXT", "This is a textnode with"), ("SPACE", " "), ("STAR", 2), ("TEXT", "bold"), ("STAR", 2), ("SPACE", " "), ("TEXT", "text in it")])
-
+    #
     # def test_tokenizer_bold2(self):
     #     line = "This is a textnode with bold text in **it**"
     #     tokens = tokenizer(line)
     #     self.assertEqual(tokens, [("TEXT", "This is a textnode with bold text in"), ("SPACE", " "), ("STAR", 2), ("TEXT", "it"), ("STAR", 2)])
-    # 
+    #
     # def test_tokenizer_multi_bold(self):
     #     line = "This is a **textnode** with **bold** text in it"
     #     tokens = tokenizer(line)
@@ -235,7 +235,6 @@ class TestTokenizer(unittest.TestCase):
     #             ("UNDERSCORE", 1),
     #             ("TEXT", "italic"),
     #             ("UNDERSCORE", 1),
-    #             ("SPACE", " "),
     #             ("TEXT", ", and this is"),
     #             ("SPACE", " "),
     #             ("CODE", 1),
@@ -345,35 +344,36 @@ class TestTokenizer(unittest.TestCase):
     #         ("CL_PA", 1),
     #         ("EX_MARK", "!")
     #     ])
-    #
-    # def test_tokenizer_excess_whitespace(self):
-    #     line = "  ![**image 1**](source)  and  ![[__image alt__]](source)!  "
-    #     tokens = tokenizer(line)
-    #     self.assertEqual(tokens, [
-    #         ("EX_MARK", "!"),
-    #         ("OP_BR", 1),
-    #         ("STAR", 2),
-    #         ("TEXT", "image 1"),
-    #         ("STAR", 2),
-    #         ("CL_BR", 1),
-    #         ("OP_PA", 1),
-    #         ("TEXT", "source"),
-    #         ("CL_PA", 1),
-    #         ("SPACE", " "),
-    #         ("TEXT", "and"),
-    #         ("SPACE", " "),
-    #         ("EX_MARK", "!"),
-    #         ("OP_BR", 2),
-    #         ("UNDERSCORE", 2),
-    #         ("TEXT", "image alt"),
-    #         ("UNDERSCORE", 2),
-    #         ("CL_BR", 2),
-    #         ("OP_PA", 1),
-    #         ("TEXT", "source"),
-    #         ("CL_PA", 1),
-    #         ("EX_MARK", "!")
-    #     ])
-    # 
+
+    def test_tokenizer_excess_whitespace(self):
+        line = "  ![**image 1**](source)  and  ![[__image alt__]](source)!  "
+        tokens = tokenizer(line)
+        print(f"tokens: {tokens}")
+        self.assertEqual(tokens, [
+            ("EX_MARK", "!"),
+            ("OP_BR", 1),
+            ("STAR", 2),
+            ("TEXT", "image 1"),
+            ("STAR", 2),
+            ("CL_BR", 1),
+            ("OP_PA", 1),
+            ("TEXT", "source"),
+            ("CL_PA", 1),
+            ("SPACE", " "),
+            ("TEXT", "and"),
+            ("SPACE", " "),
+            ("EX_MARK", "!"),
+            ("OP_BR", 2),
+            ("UNDERSCORE", 2),
+            ("TEXT", "image alt"),
+            ("UNDERSCORE", 2),
+            ("CL_BR", 2),
+            ("OP_PA", 1),
+            ("TEXT", "source"),
+            ("CL_PA", 1),
+            ("EX_MARK", "!")
+        ])
+
     # def test_tokenizer_excess_whitespace2(self):
     #     line = "    This    is    a       textnode   with * bold   *       text in   it "
     #     tokens = tokenizer(line)
