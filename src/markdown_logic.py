@@ -39,18 +39,14 @@ def remove_excess_whitespace(tuple_list):
     if last_element[0] != "SPACE":
         new_list.append(last_element)
     
-    print(f"REMOVE EXCESS WHITESPACE FUNCTION RETURN LIST: {new_list}")
     return new_list
 
 def merge_and_remove_text_tokens(tokens):
     new_list = []
-    # print(f"tokens: {tokens}")
 
     x = 0
     while x < len(tokens):
-        # print("")
-        # print("-----NEW LOOP-----")
-        # print("")
+        
         if tokens[x][0] == "TEXT":
             merge_list = []
             
@@ -66,7 +62,7 @@ def merge_and_remove_text_tokens(tokens):
 
                 if x == len(tokens):
                     break
-            # print(f"merge list: {merge_list}")
+            
             match len(merge_list):
                 case 0:
                     raise Exception("merge_list is empty. Not suppose to happen")
@@ -99,11 +95,9 @@ def merge_and_remove_text_tokens(tokens):
             if x != len(tokens):
                 new_list.append(tokens[x])
             
-            # print(f"Current new_list:{new_list}")
         else:
             new_list.append(tokens[x])
         x += 1
-    # print(f"Final new_list:{new_list}")
     return new_list
 
 # Description: Seperates a line into tuple tokens representing inline markdowns including regular text
@@ -215,10 +209,6 @@ def tokenizer(line):
 
 
 def add_symbols(token):
-    
-    if token[1] == "!":
-        return "!"
-    
     token_string = ""
     symbol = TokenSymbols[token[0]]
     
@@ -264,7 +254,7 @@ def merge_code_tokens(tokens):
                             break
                         else:
                             code_text += add_symbols(tokens[x])
-                    elif tokens[x][0] == "TEXT":
+                    elif isinstance(tokens[x][1], str):
                         code_text += tokens[x][1]
                     else:
                         code_text += add_symbols(tokens[x])
@@ -315,9 +305,9 @@ def merge_image_tokens(tokens):
             ex_mark = x
             x += 1
             while tokens[x][0] != "CL_BR" and x < len(tokens) - 1:
-                if tokens[x][0] == "TEXT":
+                if isinstance(tokens[x][1], str):
                     alt += tokens[x][1]
-                elif TokenSymbols[tokens[x][0]]:
+                elif isinstance(tokens[x][1], int):
                     alt += add_symbols(tokens[x])
                 else:
                     raise Exception(f"Unexpected behavior encountered!\n  Tokens: {tokens}\n  Current Token:{tokens[x]}\n  alt:{alt}\n  src:{src}\n  x:{x}\n")
@@ -337,9 +327,9 @@ def merge_image_tokens(tokens):
             if tokens[x][0] == "CL_BR" and tokens[x + 1][0] == "OP_PA":
                 x += 1
                 while tokens[x][0] != "CL_PA" and x < len(tokens):
-                    if tokens[x][0] == "TEXT":
+                    if isinstance(tokens[x][1], str):
                         src += tokens[x][1]
-                    elif TokenSymbols[tokens[x][0]]:
+                    elif isinstance(tokens[x][1], int):
                         src += add_symbols(tokens[x])
                     else:
                         raise Exception(f"Unexpected behavior encountered!\n  Tokens: {tokens}\n  Current Token:{tokens[x]}\n  alt:{alt}\n  src:{src}\n  x:{x}\n")
@@ -395,14 +385,9 @@ def merge_link_tokens(tokens, debug = None):
             if x > 0 and tokens[x - 1][0] != "EX_MARK" or x == 0:
                 op_br = x
                 while tokens[x][0] != "CL_BR" and x < len(tokens) - 1:
-                    
-                    # if debug != None:
-                    #     print(x, tokens[x])
-                    
-
-                    if tokens[x][0] == "TEXT":
+                    if isinstance(tokens[x][1], str):
                         text += tokens[x][1]
-                    elif TokenSymbols[tokens[x][0]]:
+                    elif isinstance(tokens[x][1], int):
                         text += add_symbols(tokens[x])
                     else:
                         raise Exception(f"Unexpected behavior encountered!\n  Tokens: {tokens}\n  Current Token:{tokens[x]}\n  text:{text}\n  url:{url}\n  x:{x}\n")
@@ -435,9 +420,9 @@ def merge_link_tokens(tokens, debug = None):
                 if isinstance(tokens[x], tuple):
                     if tokens[x][0] == "OP_PA":
                         while tokens[x][0] != "CL_PA" and x < len(tokens):
-                            if tokens[x][0] == "TEXT":
+                            if isinstance(tokens[x][1], str):
                                 url += tokens[x][1]
-                            elif TokenSymbols[tokens[x][0]]:
+                            elif isinstance(tokens[x][1], int):
                                 url += add_symbols(tokens[x])
                             else:
                                 raise Exception(f"Unexpected behavior encountered!\n  Tokens: {tokens}\n  Current Token:{tokens[x]}\n  text:{text}\n  url:{url}\n  x:{x}\n")
@@ -471,16 +456,6 @@ def merge_link_tokens(tokens, debug = None):
             new_tokens.append(tokens[x])
         x += 1
     return new_tokens
-
-
-
-def symbol_list(token):
-    s_list = []
-
-    for x in range(0, token[1]):
-        s_list.append(TokenSymbols[token[0]])
-
-    return s_list
 
 # def process_symbol_stack(symbol_stack):
 #     new_stack = []
